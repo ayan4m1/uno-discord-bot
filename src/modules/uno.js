@@ -1,13 +1,15 @@
 import { MessageEmbed } from 'discord.js';
 import { createMachine, assign } from 'xstate';
+import { shuffle, sampleSize, without, sample } from 'lodash';
 
 import { discord as config } from 'modules/config';
 import { getNotificationChannel } from 'modules/discord';
+import { createDeck } from './deck';
 
-const sendEmbed = (embed) => {
+const sendMessage = (message) => {
   const channel = getNotificationChannel(config.guildId, config.channelId);
 
-  return channel.send(embed);
+  return channel.send(message);
 };
 
 export const createGame = (
@@ -21,12 +23,15 @@ export const createGame = (
       id: 'uno',
       initial: 'idle',
       context: {
-        deck: [],
-        hands: new Map(),
-        players: []
+        deck: createDeck(),
+        discardPile: [],
+        hands: {},
+        players: [],
+        activePlayer: null
       },
       states: {
         idle: {
+          entry: 'resetGameState',
           on: {
             START: {
               target: 'solicitPlayers'
@@ -36,10 +41,15 @@ export const createGame = (
         solicitPlayers: {
           entry: 'sendSolicitMessage',
           after: {
-            [options.solicitDelay]: {
-              target: 'startGame',
-              cond: 'canGameStart'
-            }
+            [options.solicitDelay]: [
+              {
+                target: 'startGame',
+                cond: 'canGameStart'
+              },
+              {
+                target: 'noPlayers'
+              }
+            ]
           },
           on: {
             PLAYER_ADD: {
@@ -55,20 +65,39 @@ export const createGame = (
           }
         },
         startGame: {
-          entry: 'sendGameStartMessage',
+          entry: ['sendGameStartMessage', 'shuffleDeck', 'dealHands'],
+          always: [{ target: 'startRound' }]
+        },
+        startRound: {
+          entry: ['activateNextPlayer', 'sendRoundStartMessage'],
+          always: [{ target: 'announceWinner', cond: 'isGameOver' }],
           on: {
+            PLAYER_PLAY: {
+              target: 'startRound',
+              actions: ''
+            },
+            PLAYER_PASS: {
+              target: 'startRound',
+              actions: ''
+            },
             STOP: {
-              target: 'idle',
-              actions: 'sendStopMessage'
+              target: 'endGame'
             }
           }
         },
-        startRound: {
-          entry: 'sendRoundStartMessage',
-          on: {
-            STOP: {
-              target: 'idle',
-              actions: 'sendStopMessage'
+        announceWinner: {
+          entry: 'sendWinnerMessage',
+          after: {
+            [options.endDelay]: {
+              target: 'idle'
+            }
+          }
+        },
+        noPlayers: {
+          entry: 'sendNoPlayersMessage',
+          after: {
+            [options.endDelay]: {
+              target: 'idle'
             }
           }
         },
@@ -85,37 +114,68 @@ export const createGame = (
     {
       actions: {
         sendSolicitMessage: () =>
-          sendEmbed(
+          sendMessage(
             new MessageEmbed()
               .setTitle('Join Uno!')
-              .setDescription('Say `!uno join` to join the game!')
+              .setDescription(
+                `Say \`!uno join\` to join the game! Game will start in ${
+                  options.solicitDelay / 10000
+                } seconds.`
+              )
           ),
-        sendGameStartMessage: () =>
-          sendEmbed(
+        sendGameStartMessage: (context) =>
+          sendMessage(
             new MessageEmbed()
               .setTitle('Game is starting!')
-              .setDescription('Get ready...')
+              .setDescription(
+                `Dealing cards to ${context.players.length} players...`
+              )
           ),
         sendGameStopMessage: () =>
-          sendEmbed(
+          sendMessage(
             new MessageEmbed()
               .setTitle('Game stopped!')
               .setDescription('The game was aborted.')
           ),
         notifyAddPlayer: (_, event) =>
-          sendEmbed(
+          sendMessage(
             new MessageEmbed()
               .setTitle('New player!')
               .setDescription(`${event.username} has joined the game!`)
           ),
         notifyRemovePlayer: (_, event) =>
-          sendEmbed(
+          sendMessage(
             new MessageEmbed()
               .setTitle('Lost player!')
               .setDescription(`${event.username} has left the game!`)
           ),
+        sendRoundStartMessage: (context) =>
+          sendMessage(
+            new MessageEmbed().setTitle(
+              `${context.activePlayer.username}'s turn!`
+            )
+          ),
+        sendNoPlayersMessage: () =>
+          sendMessage('Aborted the game because no players joined!'),
+        activateNextPlayer: assign({
+          activePlayer: (context) => {
+            const currentIndex = context.players.indexOf(context.activePlayer);
+
+            if (currentIndex === context.players.length - 1) {
+              return context.players[0];
+            } else {
+              return context.players[currentIndex + 1];
+            }
+          }
+        }),
         addPlayer: assign({
-          players: (context, event) => [...context.players, { ...event }]
+          players: (context, event) => [
+            ...context.players,
+            {
+              id: event.id,
+              username: event.username
+            }
+          ]
         }),
         removePlayer: assign({
           players: (context, event) => {
@@ -133,10 +193,50 @@ export const createGame = (
               return modified;
             }
           }
+        }),
+        shuffleDeck: assign({
+          deck: (context) => shuffle(context.deck)
+        }),
+        dealHands: assign((context) => {
+          const hands = {};
+
+          let remainingDeck = [...context.deck];
+
+          for (const player of context.players) {
+            const hand = sampleSize(context.deck, 7);
+
+            hands[player.id] = hand;
+            remainingDeck = without(remainingDeck, ...hand);
+          }
+
+          const discardPile = [sample(remainingDeck)];
+
+          remainingDeck = without(remainingDeck, discardPile[0]);
+
+          return {
+            deck: remainingDeck,
+            hands,
+            discardPile
+          };
+        }),
+        resetGameState: assign({
+          deck: createDeck(),
+          discardPile: [],
+          hands: {},
+          players: []
         })
       },
       guards: {
-        canGameStart: (context) => context.players.length > 0
+        canGameStart: (context) => context.players.length > 0,
+        isGameOver: (context) => {
+          for (const key in context.hands) {
+            if (context.hands[key].length === 0) {
+              return true;
+            }
+          }
+
+          return false;
+        }
       }
     }
   );
