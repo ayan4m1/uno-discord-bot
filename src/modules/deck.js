@@ -36,6 +36,7 @@ class Card {
     const colorIndex = Math.floor(index / 25);
     const valueIndex = index % 25;
 
+    this.type = CardType.NUMBER;
     this.color = [
       CardColor.RED,
       CardColor.YELLOW,
@@ -79,6 +80,7 @@ class Card {
         return `${this.colorCode}D2`;
       case CardType.REVERSE:
         return `${this.colorCode}R`;
+      case CardType.NUMBER:
       default:
         return `${this.colorCode}${this.value}`;
     }
