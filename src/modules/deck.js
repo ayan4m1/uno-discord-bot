@@ -15,7 +15,7 @@ export const CardColor = {
 };
 
 class Card {
-  value = -1;
+  value = null;
   color = null;
   type = null;
 
