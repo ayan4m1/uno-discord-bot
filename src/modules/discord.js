@@ -116,7 +116,7 @@ export const getPrivateMessageChannel = async (userId) => {
     return null;
   }
 
-  return member.user.dmChannel;
+  return member.user.dmChannel || member.user.createDM();
 };
 
 client.on('ready', async () => {
