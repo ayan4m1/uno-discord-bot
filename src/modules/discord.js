@@ -1,5 +1,4 @@
 import Discord from 'discord.js';
-import { isBefore, subDays } from 'date-fns';
 
 import { discord as config } from 'modules/config';
 import { getLogger } from 'modules/logging';
@@ -28,108 +27,29 @@ const handleMessage = async (message) => {
   try {
     await fetchPartial(message);
 
-    for (const handler of commands.values()) {
-      if (handler.events && handler.events.message) {
-        handler.events.message(message);
-      }
-    }
+    const { author, content } = message;
 
-    const { content } = message;
-
-    if (message.author.bot || !content.startsWith('!')) {
+    if (author.bot || !content.startsWith(config.commandPrefix)) {
       return;
     }
 
     const args = content.split(/\s+/).map((arg) => arg.trim());
-    const [command, subCommand, ...otherArgs] = args;
-    const commandWord = command.replace('!', '').toLowerCase();
+    const [command, ...otherArgs] = args;
+    const commandWord = command.replace(config.commandPrefix, '').toLowerCase();
 
     if (!commands.has(commandWord)) {
-      return log.info(
-        `${message.author} tried to use an unrecognized command: ${command}!`
+      return log.warn(
+        `${author.username} tried to use an unrecognized command: ${command}!`
       );
     }
 
-    const { handler, commands: commandMap } = commands.get(commandWord);
+    const handler = commands.get(commandWord);
 
-    if (handler) {
-      return await handler(message, [subCommand, ...otherArgs]);
-    }
-
-    if (!commands) {
-      return;
-    }
-
-    const { handler: subHandler } = commandMap[subCommand.toLowerCase()];
-
-    if (!subHandler) {
-      return message.reply('that command is not yet implemented!');
-    }
-
-    return await subHandler(message, otherArgs);
+    return await handler(message, otherArgs);
   } catch (error) {
     log.error(error.message);
     log.error(error.stack);
   }
-};
-
-const getMessages = (channel, before) =>
-  channel.messages.fetch({
-    limit: 100,
-    before
-  });
-
-export const getAllMessages = async (channel) => {
-  const messages = [];
-
-  if (channel.type !== 'text' || !channel.viewable) {
-    log.info(`Skipping channel ${channel.name} because it is not valid!`);
-    return messages;
-  }
-
-  let lastId;
-
-  do {
-    log.info(`Fetching messages before ${lastId} for #${channel.name}`);
-    const results = await getMessages(channel, lastId);
-
-    if (results.size > 0) {
-      messages.push(...results.array());
-
-      const lastEntry = results.last();
-
-      if (
-        isBefore(lastEntry.createdAt, subDays(Date.now(), config.backfillDays))
-      ) {
-        log.info(
-          `Stopping for #${channel.name} because we hit ${config.backfillDays} days`
-        );
-        break;
-      }
-
-      lastId = lastEntry.id;
-    } else {
-      lastId = null;
-    }
-  } while (lastId);
-
-  return messages;
-};
-
-export const getNewestMessages = async (channel, newestMessages) => {
-  const messages = await getAllMessages(channel);
-
-  messages.forEach((message) => {
-    const [id, date] = [message.author.id, message.createdAt];
-
-    if (!newestMessages.has(id)) {
-      newestMessages.set(id, date);
-    } else if (isBefore(newestMessages.get(id), date)) {
-      newestMessages.set(id, date);
-    }
-  });
-
-  return newestMessages;
 };
 
 export const postEmbed = async (channel, embed, elements = []) => {
@@ -172,17 +92,31 @@ export const disconnectBot = () => {
   client.destroy();
 };
 
-export const registerCommand = (command, handler) => {
-  commands.set(command, handler);
+export const registerCommands = (cmds) => {
+  for (const [command, handler] of Object.entries(cmds)) {
+    commands.set(command, handler);
+  }
 };
 
 export const isAdmin = (member) =>
   config.adminRoleIds.some((role) => member.roles.cache.has(role));
 
-export const getNotificationChannel = (guildId, channelId) => {
-  const guild = client.guilds.resolve(guildId);
+export const getNotificationChannel = () => {
+  const guild = client.guilds.resolve(config.guildId);
 
-  return guild.channels.cache.find((chan) => chan.id === channelId);
+  return guild.channels.cache.find((chan) => chan.id === config.channelId);
+};
+
+export const getPrivateMessageChannel = async (userId) => {
+  const guild = client.guilds.resolve(config.guildId);
+
+  const member = await guild.members.fetch(userId);
+
+  if (!member) {
+    return null;
+  }
+
+  return member.user.dmChannel;
 };
 
 client.on('ready', async () => {

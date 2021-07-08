@@ -4,7 +4,8 @@ export const discord = {
   adminRoleIds: process.env.UNO_DISCORD_ADMIN_ROLE_IDS.split(/,/),
   botToken: process.env.UNO_DISCORD_BOT_TOKEN,
   channelId: process.env.UNO_DISCORD_CHANNEL_ID,
-  guildId: process.env.UNO_DISCORD_GUILD_ID
+  guildId: process.env.UNO_DISCORD_GUILD_ID,
+  commandPrefix: process.env.UNO_DISCORD_COMMAND_PREFIX || '?'
 };
 
 export const logging = {

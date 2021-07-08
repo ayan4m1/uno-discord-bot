@@ -11,68 +11,42 @@ const service = interpret(createGame(config));
 
 service.start();
 
-const handleStart = async (message) => {
-  if (!isAdmin(message.member)) {
-    return message.reply('You cannot start games.');
-  }
-
-  service.send({ type: 'START' });
-};
-const handleStop = async (message) => {
-  if (!isAdmin(message.member)) {
-    return message.reply('You cannot stop games.');
-  }
-
-  service.send({ type: 'STOP' });
-};
-const handleStatus = async (message) => {
-  log.info(message);
-};
-const handleJoin = async (message) => {
-  const {
-    author: { id, username }
-  } = message;
-
-  service.send({
-    type: 'PLAYER_ADD',
-    id,
-    username
-  });
-};
-const handleLeave = async (message) => {
-  const {
-    author: { id, username }
-  } = message;
-
-  service.send({
-    type: 'PLAYER_REMOVE',
-    id,
-    username
-  });
-};
-
 export default {
-  help: '!uno <start|stop|status|join|leave>',
-  commands: {
-    start: {
-      help: '!uno start',
-      handler: handleStart
-    },
-    stop: {
-      help: '!uno stop',
-      handler: handleStop
-    },
-    status: {
-      help: '!uno status',
-      handler: handleStatus
-    },
-    join: {
-      help: '!uno join',
-      handler: handleJoin
-    },
-    leave: {
-      help: '!uno leave',
-      handler: handleLeave
+  start: (message) => {
+    if (!isAdmin(message.member)) {
+      return message.reply('You cannot start games.');
     }
+
+    service.send({ type: 'START' });
+  },
+  stop: (message) => {
+    if (!isAdmin(message.member)) {
+      return message.reply('You cannot stop games.');
+    }
+
+    service.send({ type: 'STOP' });
+  },
+  status: (message) => {
+    log.info(message);
+  },
+  join: ({ author: { id, username } }) => {
+    service.send({
+      type: 'PLAYER_ADD',
+      id,
+      username
+    });
+  },
+  leave: ({ author: { id, username } }) => {
+    service.send({
+      type: 'PLAYER_REMOVE',
+      id,
+      username
+    });
+  },
+  hand: async ({ author: { id } }) => {
+    service.send({
+      type: 'PLAYER_REQUEST_HAND',
+      id
+    });
   }
 };

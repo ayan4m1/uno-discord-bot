@@ -1,6 +1,6 @@
 import uno from 'handlers/uno';
-import { connectBot, registerCommand } from 'modules/discord';
+import { connectBot, registerCommands } from 'modules/discord';
 
-registerCommand('uno', uno);
+registerCommands(uno);
 
 connectBot();

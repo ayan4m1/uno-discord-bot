@@ -2,15 +2,31 @@ import { MessageEmbed } from 'discord.js';
 import { createMachine, assign } from 'xstate';
 import { shuffle, sampleSize, without, sample } from 'lodash';
 
-import { discord as config } from 'modules/config';
-import { getNotificationChannel } from 'modules/discord';
+import {
+  getNotificationChannel,
+  getPrivateMessageChannel
+} from 'modules/discord';
 import { createDeck } from './deck';
 
 const sendMessage = (message) => {
-  const channel = getNotificationChannel(config.guildId, config.channelId);
+  const channel = getNotificationChannel();
 
   return channel.send(message);
 };
+
+const sendPrivateMessage = async (userId, message) => {
+  const channel = await getPrivateMessageChannel(userId);
+
+  return channel.send(message);
+};
+
+const createContext = () => ({
+  deck: createDeck(),
+  discardPile: [],
+  hands: {},
+  players: [],
+  activePlayer: null
+});
 
 export const createGame = (
   options = {
@@ -22,13 +38,7 @@ export const createGame = (
     {
       id: 'uno',
       initial: 'idle',
-      context: {
-        deck: createDeck(),
-        discardPile: [],
-        hands: {},
-        players: [],
-        activePlayer: null
-      },
+      context: createContext(),
       states: {
         idle: {
           entry: 'resetGameState',
@@ -74,11 +84,14 @@ export const createGame = (
           on: {
             PLAYER_PLAY: {
               target: 'startRound',
-              actions: ''
+              actions: 'playCard'
             },
             PLAYER_PASS: {
               target: 'startRound',
-              actions: ''
+              actions: 'pass'
+            },
+            PLAYER_REQUEST_HAND: {
+              actions: 'sendHand'
             },
             STOP: {
               target: 'endGame'
@@ -118,7 +131,7 @@ export const createGame = (
             new MessageEmbed()
               .setTitle('Join Uno!')
               .setDescription(
-                `Say \`!uno join\` to join the game! Game will start in ${
+                `Say \`?join\` to join the game! Game will start in ${
                   options.solicitDelay / 10000
                 } seconds.`
               )
@@ -156,7 +169,18 @@ export const createGame = (
             )
           ),
         sendNoPlayersMessage: () =>
-          sendMessage('Aborted the game because no players joined!'),
+          sendMessage('Cancelled the game because no players joined!'),
+        sendHand: async (context, event) => {
+          const hand = context.hands[event.id];
+
+          const embed = new MessageEmbed()
+            .setTitle('Your Hand')
+            .setDescription(
+              hand.reduce((prev, curr) => prev + curr.toString(), '')
+            );
+
+          await sendPrivateMessage(event.id, embed);
+        },
         activateNextPlayer: assign({
           activePlayer: (context) => {
             const currentIndex = context.players.indexOf(context.activePlayer);
@@ -219,12 +243,7 @@ export const createGame = (
             discardPile
           };
         }),
-        resetGameState: assign({
-          deck: createDeck(),
-          discardPile: [],
-          hands: {},
-          players: []
-        })
+        resetGameState: assign(createContext)
       },
       guards: {
         canGameStart: (context) => context.players.length > 0,
