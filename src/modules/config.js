@@ -15,7 +15,8 @@ export const logging = {
 
 export const uno = {
   endDelay: process.env.UNO_GAME_END_DELAY || 20000,
-  solicitDelay: process.env.UNO_GAME_SOLICIT_DELAY || 60000
+  solicitDelay: process.env.UNO_GAME_SOLICIT_DELAY || 60000,
+  cardBaseUrl: process.env.UNO_GAME_CARD_BASE_URL
 };
 
 export default {
