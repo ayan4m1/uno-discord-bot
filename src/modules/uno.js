@@ -6,7 +6,11 @@ import {
   getNotificationChannel,
   getPrivateMessageChannel
 } from 'modules/discord';
-import { createDeck } from './deck';
+import { createDeck } from 'modules/deck';
+import { uno as config } from 'modules/config';
+
+const getCardUrl = (card, size = 'S') =>
+  `${config.cardBaseUrl}${card.toString()}_${size}.png`;
 
 const sendMessage = (message) => {
   const channel = getNotificationChannel();
@@ -162,16 +166,15 @@ export const createGame = (
               .setTitle('Lost player!')
               .setDescription(`${event.username} has left the game!`)
           ),
-        sendRoundStartMessage: (context) =>
-          sendMessage(
+        sendRoundStartMessage: ({ discardPile, activePlayer }) => {
+          const discard = discardPile[discardPile.length - 1];
+
+          return sendMessage(
             new MessageEmbed()
-              .setTitle(`${context.activePlayer.username}'s turn!`)
-              .setDescription(
-                `Discard: ${context.discardPile[
-                  context.discardPile.length - 1
-                ].toString()}`
-              )
-          ),
+              .setTitle(`${activePlayer.username}'s turn!`)
+              .setImage(getCardUrl(discard, 'L'))
+          );
+        },
         sendNoPlayersMessage: () =>
           sendMessage('Cancelled the game because no players joined!'),
         sendHand: async (context, event) => {
