@@ -132,7 +132,7 @@ export const createGame = (
               .setTitle('Join Uno!')
               .setDescription(
                 `Say \`?join\` to join the game! Game will start in ${
-                  options.solicitDelay / 10000
+                  options.solicitDelay / 1e3
                 } seconds.`
               )
           ),
