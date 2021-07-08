@@ -94,7 +94,7 @@ export const createGame = (
               actions: 'sendHand'
             },
             STOP: {
-              target: 'endGame'
+              target: 'stopGame'
             }
           }
         },
@@ -114,8 +114,8 @@ export const createGame = (
             }
           }
         },
-        endGame: {
-          entry: 'sendGameEndMessage',
+        stopGame: {
+          entry: 'sendGameStopMessage',
           after: {
             [options.endDelay]: {
               target: 'idle'
@@ -164,9 +164,13 @@ export const createGame = (
           ),
         sendRoundStartMessage: (context) =>
           sendMessage(
-            new MessageEmbed().setTitle(
-              `${context.activePlayer.username}'s turn!`
-            )
+            new MessageEmbed()
+              .setTitle(`${context.activePlayer.username}'s turn!`)
+              .setDescription(
+                `Discard: ${context.discardPile[
+                  context.discardPile.length - 1
+                ].toString()}`
+              )
           ),
         sendNoPlayersMessage: () =>
           sendMessage('Cancelled the game because no players joined!'),
