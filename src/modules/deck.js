@@ -1,9 +1,9 @@
 export const CardType = {
   NUMBER: 'number',
   WILD: 'wild',
-  WILD_DRAW_FOUR: 'wildDrawFour',
+  WILD_DRAW: 'wildDraw',
   SKIP: 'skip',
-  DRAW_TWO: 'drawTwo',
+  DRAW: 'draw',
   REVERSE: 'reverse'
 };
 
@@ -26,7 +26,7 @@ class Card {
    */
   constructor(index) {
     if (index > 103) {
-      this.type = CardType.WILD_DRAW_FOUR;
+      this.type = CardType.WILD_DRAW;
       return;
     } else if (index > 99) {
       this.type = CardType.WILD;
@@ -51,9 +51,7 @@ class Card {
     } else {
       const typeIndex = (valueIndex - 19) % 3;
 
-      this.type = [CardType.SKIP, CardType.DRAW_TWO, CardType.REVERSE][
-        typeIndex
-      ];
+      this.type = [CardType.SKIP, CardType.DRAW, CardType.REVERSE][typeIndex];
     }
   }
 
@@ -70,14 +68,14 @@ class Card {
    */
   toString() {
     switch (this.type) {
-      case CardType.WILD_DRAW_FOUR:
-        return 'WD4';
+      case CardType.WILD_DRAW:
+        return 'WD';
       case CardType.WILD:
         return 'W';
       case CardType.SKIP:
         return `${this.colorCode}S`;
-      case CardType.DRAW_TWO:
-        return `${this.colorCode}D2`;
+      case CardType.DRAW:
+        return `${this.colorCode}D`;
       case CardType.REVERSE:
         return `${this.colorCode}R`;
       case CardType.NUMBER:
