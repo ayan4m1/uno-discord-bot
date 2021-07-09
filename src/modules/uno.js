@@ -94,7 +94,7 @@ export const createGame = (
               target: 'startRound',
               actions: 'pass'
             },
-            PLAYER_REQUEST_HAND: {
+            REQUEST_HAND: {
               actions: 'sendHand'
             },
             STOP: {
@@ -132,21 +132,16 @@ export const createGame = (
       actions: {
         sendSolicitMessage: () =>
           sendMessage(
-            new MessageEmbed()
-              .setTitle('Join Uno!')
-              .setDescription(
-                `Say \`?join\` to join the game! Game will start in ${
-                  options.solicitDelay / 1e3
-                } seconds.`
-              )
+            new MessageEmbed().setTitle('Join Uno!').setDescription(
+              `Say \`?join\` to join the game!
+              Starting in ${options.solicitDelay / 1e3} seconds...`
+            )
           ),
-        sendGameStartMessage: (context) =>
+        sendGameStartMessage: ({ players }) =>
           sendMessage(
             new MessageEmbed()
-              .setTitle('Game is starting!')
-              .setDescription(
-                `Dealing cards to ${context.players.length} players...`
-              )
+              .setTitle('Game starting!')
+              .setDescription(`Dealing cards to ${players.length} players...`)
           ),
         sendGameStopMessage: () =>
           sendMessage(
@@ -177,31 +172,29 @@ export const createGame = (
         },
         sendNoPlayersMessage: () =>
           sendMessage('Cancelled the game because no players joined!'),
-        sendHand: async (context, event) => {
-          const hand = context.hands[event.id];
+        sendHand: async ({ hands }, event) => {
+          const hand = hands[event.id];
 
           const embed = new MessageEmbed()
             .setTitle('Your Hand')
-            .setDescription(
-              hand.reduce((prev, curr) => prev + curr.toString(), '')
-            );
+            .setDescription(hand.map((card) => card.toString()).join(', '));
 
           await sendPrivateMessage(event.id, embed);
         },
         activateNextPlayer: assign({
-          activePlayer: (context) => {
-            const currentIndex = context.players.indexOf(context.activePlayer);
+          activePlayer: ({ players, activePlayer }) => {
+            const currentIndex = players.indexOf(activePlayer);
 
-            if (currentIndex === context.players.length - 1) {
-              return context.players[0];
+            if (currentIndex === players.length - 1) {
+              return players[0];
             } else {
-              return context.players[currentIndex + 1];
+              return players[currentIndex + 1];
             }
           }
         }),
         addPlayer: assign({
-          players: (context, event) => [
-            ...context.players,
+          players: ({ players }, event) => [
+            ...players,
             {
               id: event.id,
               username: event.username
@@ -209,15 +202,15 @@ export const createGame = (
           ]
         }),
         removePlayer: assign({
-          players: (context, event) => {
-            const playerIndex = context.players.findIndex(
+          players: ({ players }, event) => {
+            const playerIndex = players.findIndex(
               (player) => player.id === event.id
             );
 
             if (playerIndex === -1) {
-              return context.players;
+              return players;
             } else {
-              const modified = [...context.players];
+              const modified = [...players];
 
               modified.splice(playerIndex, 1);
 
@@ -226,15 +219,15 @@ export const createGame = (
           }
         }),
         shuffleDeck: assign({
-          deck: (context) => shuffle(context.deck)
+          deck: ({ deck }) => shuffle(deck)
         }),
-        dealHands: assign((context) => {
+        dealHands: assign(({ deck, players }) => {
           const hands = {};
 
-          let remainingDeck = [...context.deck];
+          let remainingDeck = [...deck];
 
-          for (const player of context.players) {
-            const hand = sampleSize(context.deck, 7);
+          for (const player of players) {
+            const hand = sampleSize(deck, 7);
 
             hands[player.id] = hand;
             remainingDeck = without(remainingDeck, ...hand);
@@ -253,16 +246,9 @@ export const createGame = (
         resetGameState: assign(createContext)
       },
       guards: {
-        canGameStart: (context) => context.players.length > 0,
-        isGameOver: (context) => {
-          for (const key in context.hands) {
-            if (context.hands[key].length === 0) {
-              return true;
-            }
-          }
-
-          return false;
-        }
+        canGameStart: ({ players }) => players.length > 0,
+        isGameOver: ({ hands }) =>
+          Object.entries(hands).some(([, hand]) => hand.length === 0)
       }
     }
   );

@@ -43,9 +43,9 @@ export default {
       username
     });
   },
-  hand: async ({ author: { id } }) => {
+  hand: ({ author: { id } }) => {
     service.send({
-      type: 'PLAYER_REQUEST_HAND',
+      type: 'REQUEST_HAND',
       id
     });
   }
