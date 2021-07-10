@@ -6,7 +6,7 @@ import {
   getNotificationChannel,
   getPrivateMessageChannel
 } from 'modules/discord';
-import { CardType, createDeck } from 'modules/deck';
+import { CardColor, CardType, createDeck } from 'modules/deck';
 import { uno as config } from 'modules/config';
 
 const getCardUrl = (card, size = 'S') =>
@@ -26,6 +26,7 @@ const sendPrivateMessage = async (userId, message) => {
 
 const createContext = () => ({
   deck: createDeck(),
+  color: null,
   discardPile: [],
   hands: {},
   players: [],
@@ -37,6 +38,13 @@ const toIdleAfterEnd = {
     [config.endDelay]: {
       target: 'idle'
     }
+  }
+};
+
+const onStop = {
+  STOP: {
+    target: 'idle',
+    actions: 'notifyStop'
   }
 };
 
@@ -75,10 +83,7 @@ export const createGame = () =>
             PLAYER_REMOVE: {
               actions: ['removePlayer', 'notifyRemovePlayer']
             },
-            STOP: {
-              target: 'idle',
-              actions: 'notifyStop'
-            }
+            ...onStop
           }
         },
         startGame: {
@@ -101,7 +106,7 @@ export const createGame = () =>
             }
           },
           on: {
-            PLAY: [
+            CARD_PLAY: [
               {
                 actions: 'notifyInvalidPlayer',
                 cond: 'isPlayerInvalid'
@@ -119,7 +124,7 @@ export const createGame = () =>
                 actions: ['notifyPlay', 'playCard']
               }
             ],
-            DRAW: [
+            CARD_DRAW: [
               {
                 actions: 'notifyInvalidPlayer',
                 cond: 'isPlayerInvalid'
@@ -131,9 +136,31 @@ export const createGame = () =>
             HAND_REQUEST: {
               actions: 'sendHand'
             },
-            STOP: {
-              target: 'stopGame'
+            ...onStop
+          }
+        },
+        changeColor: {
+          after: {
+            [config.roundDelay]: {
+              target: 'startRound',
+              actions: ['notifySkipPlayer', 'chooseRandomColor']
             }
+          },
+          on: {
+            COLOR_CHANGE: [
+              {
+                actions: 'notifyInvalidPlayer',
+                cond: 'isPlayerInvalid'
+              },
+              {
+                actions: 'notifyInvalidColor',
+                cond: 'isColorInvalid'
+              },
+              {
+                actions: ['notifyColorChange', 'changeColor']
+              }
+            ],
+            ...onStop
           }
         },
         announceWinner: {
@@ -311,6 +338,9 @@ export const createGame = () =>
             },
             deck: without(deck, newCard)
           };
+        }),
+        chooseRandomColor: assign({
+          color: () => CardColor.fromString(sample(['R', 'G', 'B', 'Y']))
         })
       },
       guards: {
@@ -324,7 +354,8 @@ export const createGame = () =>
           return !hand.some((handCard) => handCard.equals(card));
         },
         isCardInvalid: ({ discardPile }, { card }) =>
-          !last(discardPile).validPlay(card)
+          !last(discardPile).validPlay(card),
+        isColorInvalid: (_, { color }) => !CardColor.fromString(color)
       }
     }
   );
