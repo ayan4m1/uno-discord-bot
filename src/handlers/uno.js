@@ -29,37 +29,38 @@ export default {
   status: (message) => {
     log.info(message);
   },
-  join: ({ author: { id, username } }) => {
+  join: ({ author: { id, username } }) =>
     service.send({
       type: 'PLAYER_ADD',
       id,
       username
-    });
-  },
-  leave: ({ author: { id, username } }) => {
+    }),
+  leave: ({ author: { id, username } }) =>
     service.send({
       type: 'PLAYER_REMOVE',
       id,
       username
-    });
-  },
-  hand: ({ author: { id } }) => {
+    }),
+  hand: ({ author: { id } }) =>
     service.send({
       type: 'HAND_REQUEST',
       id
-    });
-  },
-  draw: ({ author: { id } }) => {
+    }),
+  draw: ({ author: { id } }) =>
     service.send({
-      type: 'DRAW',
+      type: 'CARD_DRAW',
       id
-    });
-  },
-  play: ({ author: { id } }, [card]) => {
+    }),
+  play: ({ author: { id } }, [card]) =>
     service.send({
-      type: 'PLAY',
+      type: 'CARD_PLAY',
       id,
       card: Card.fromString(card)
-    });
-  }
+    }),
+  color: ({ author: { id } }, [color]) =>
+    service.send({
+      type: 'COLOR_CHANGE',
+      id,
+      color
+    })
 };
