@@ -1,12 +1,12 @@
 import { MessageEmbed } from 'discord.js';
-import { createMachine, assign } from 'xstate';
-import { shuffle, sampleSize, without, sample } from 'lodash';
+import { createMachine, assign, send } from 'xstate';
+import { sampleSize, without, sample, last } from 'lodash';
 
 import {
   getNotificationChannel,
   getPrivateMessageChannel
 } from 'modules/discord';
-import { createDeck } from 'modules/deck';
+import { CardType, createDeck } from 'modules/deck';
 import { uno as config } from 'modules/config';
 
 const getCardUrl = (card, size = 'S') =>
@@ -32,12 +32,15 @@ const createContext = () => ({
   activePlayer: null
 });
 
-export const createGame = (
-  options = {
-    solicitDelay: 60000,
-    endDelay: 20000
+const toIdleAfterEnd = {
+  after: {
+    [config.endDelay]: {
+      target: 'idle'
+    }
   }
-) =>
+};
+
+export const createGame = () =>
   createMachine(
     {
       id: 'uno',
@@ -53,9 +56,9 @@ export const createGame = (
           }
         },
         solicitPlayers: {
-          entry: 'sendSolicitMessage',
+          entry: 'notifySolicit',
           after: {
-            [options.solicitDelay]: [
+            [config.solicitDelay]: [
               {
                 target: 'startGame',
                 cond: 'canGameStart'
@@ -74,27 +77,58 @@ export const createGame = (
             },
             STOP: {
               target: 'idle',
-              actions: 'sendStopMessage'
+              actions: 'notifyStop'
             }
           }
         },
         startGame: {
-          entry: ['sendGameStartMessage', 'shuffleDeck', 'dealHands'],
+          entry: ['notifyGameStart', 'dealHands'],
           always: [{ target: 'startRound' }]
         },
         startRound: {
-          entry: ['activateNextPlayer', 'sendRoundStartMessage'],
-          always: [{ target: 'announceWinner', cond: 'isGameOver' }],
+          entry: ['activateNextPlayer'],
+          always: [
+            { target: 'announceWinner', cond: 'isGameOver' },
+            { target: 'round' }
+          ]
+        },
+        round: {
+          entry: ['sendActivePlayerHand', 'notifyRoundStart'],
+          after: {
+            [config.roundDelay]: {
+              target: 'startRound',
+              actions: 'notifySkipPlayer'
+            }
+          },
           on: {
-            PLAYER_PLAY: {
-              target: 'startRound',
-              actions: 'playCard'
-            },
-            PLAYER_PASS: {
-              target: 'startRound',
-              actions: 'pass'
-            },
-            REQUEST_HAND: {
+            PLAY: [
+              {
+                actions: 'notifyInvalidPlayer',
+                cond: 'isPlayerInvalid'
+              },
+              {
+                actions: 'notifyMissingCard',
+                cond: 'isCardMissing'
+              },
+              {
+                actions: 'notifyInvalidCard',
+                cond: 'isCardInvalid'
+              },
+              {
+                target: 'startRound',
+                actions: ['notifyPlay', 'playCard']
+              }
+            ],
+            DRAW: [
+              {
+                actions: 'notifyInvalidPlayer',
+                cond: 'isPlayerInvalid'
+              },
+              {
+                actions: ['notifyDraw', 'dealCard', 'sendActivePlayerHand']
+              }
+            ],
+            HAND_REQUEST: {
               actions: 'sendHand'
             },
             STOP: {
@@ -103,47 +137,35 @@ export const createGame = (
           }
         },
         announceWinner: {
-          entry: 'sendWinnerMessage',
-          after: {
-            [options.endDelay]: {
-              target: 'idle'
-            }
-          }
+          entry: 'notifyWinner',
+          ...toIdleAfterEnd
         },
         noPlayers: {
-          entry: 'sendNoPlayersMessage',
-          after: {
-            [options.endDelay]: {
-              target: 'idle'
-            }
-          }
+          entry: 'notifyNoPlayers',
+          ...toIdleAfterEnd
         },
         stopGame: {
-          entry: 'sendGameStopMessage',
-          after: {
-            [options.endDelay]: {
-              target: 'idle'
-            }
-          }
+          entry: 'notifyGameStop',
+          ...toIdleAfterEnd
         }
       }
     },
     {
       actions: {
-        sendSolicitMessage: () =>
+        notifySolicit: () =>
           sendMessage(
             new MessageEmbed().setTitle('Join Uno!').setDescription(
               `Say \`?join\` to join the game!
-              Starting in ${options.solicitDelay / 1e3} seconds...`
+              Starting in ${config.solicitDelay / 1e3} seconds...`
             )
           ),
-        sendGameStartMessage: ({ players }) =>
+        notifyGameStart: ({ players }) =>
           sendMessage(
             new MessageEmbed()
               .setTitle('Game starting!')
               .setDescription(`Dealing cards to ${players.length} players...`)
           ),
-        sendGameStopMessage: () =>
+        notifyGameStop: () =>
           sendMessage(
             new MessageEmbed()
               .setTitle('Game stopped!')
@@ -161,26 +183,53 @@ export const createGame = (
               .setTitle('Lost player!')
               .setDescription(`${event.username} has left the game!`)
           ),
-        sendRoundStartMessage: ({ discardPile, activePlayer }) => {
-          const discard = discardPile[discardPile.length - 1];
-
-          return sendMessage(
+        notifyRoundStart: ({ discardPile, activePlayer }) =>
+          sendMessage(
             new MessageEmbed()
               .setTitle(`${activePlayer.username}'s turn!`)
-              .setImage(getCardUrl(discard, 'L'))
-          );
-        },
-        sendNoPlayersMessage: () =>
+              .setImage(getCardUrl(last(discardPile), 'L'))
+          ),
+        notifyNoPlayers: () =>
           sendMessage('Cancelled the game because no players joined!'),
-        sendHand: async ({ hands }, event) => {
-          const hand = hands[event.id];
+        notifyWinner: ({ players, hands }) => {
+          const [winnerId] = Object.entries(hands).find(
+            ([, hand]) => hand.length === 0
+          );
+          const winner = players.find((player) => player.id === winnerId);
+
+          return sendMessage(`${winner.username} is the winner!`);
+        },
+        notifyInvalidPlayer: () => sendMessage("It's not your turn!"),
+        notifyMissingCard: () =>
+          sendMessage("You can't play a card you don't have!"),
+        notifyInvalidCard: ({ discardPile }, { card }) =>
+          sendMessage(
+            `You cannot play ${card.toString()} on ${last(
+              discardPile
+            ).toString()}!`
+          ),
+        notifySkipPlayer: ({ activePlayer }) =>
+          sendMessage(`Skipping ${activePlayer.username}`),
+        notifyPlay: ({ activePlayer }, { card }) =>
+          sendMessage(
+            new MessageEmbed()
+              .setTitle(`${activePlayer.username} played ${card.toString()}!`)
+              .setImage(getCardUrl(card))
+          ),
+        notifyDraw: ({ activePlayer }) =>
+          sendMessage(`${activePlayer.username} drew a card!`),
+        sendActivePlayerHand: ({ activePlayer }) =>
+          send({ type: 'HAND_REQUEST', id: activePlayer.id }),
+        sendHand: async ({ hands }, { id }) => {
+          const hand = hands[id];
 
           const embed = new MessageEmbed()
             .setTitle('Your Hand')
             .setDescription(hand.map((card) => card.toString()).join(', '));
 
-          await sendPrivateMessage(event.id, embed);
+          await sendPrivateMessage(id, embed);
         },
+        resetGameState: assign(createContext),
         activateNextPlayer: assign({
           activePlayer: ({ players, activePlayer }) => {
             const currentIndex = players.indexOf(activePlayer);
@@ -202,24 +251,8 @@ export const createGame = (
           ]
         }),
         removePlayer: assign({
-          players: ({ players }, event) => {
-            const playerIndex = players.findIndex(
-              (player) => player.id === event.id
-            );
-
-            if (playerIndex === -1) {
-              return players;
-            } else {
-              const modified = [...players];
-
-              modified.splice(playerIndex, 1);
-
-              return modified;
-            }
-          }
-        }),
-        shuffleDeck: assign({
-          deck: ({ deck }) => shuffle(deck)
+          players: ({ players }, event) =>
+            players.filter((player) => player.id !== event.id)
         }),
         dealHands: assign(({ deck, players }) => {
           const hands = {};
@@ -243,12 +276,55 @@ export const createGame = (
             discardPile
           };
         }),
-        resetGameState: assign(createContext)
+        playCard: assign(({ discardPile, hands, activePlayer }, { card }) => {
+          const hand = hands[activePlayer.id].filter(
+            (handCard) => !handCard.equals(card)
+          );
+
+          if (hand.length === 1) {
+            sendMessage(`${activePlayer.username} has UNO!`);
+          }
+
+          switch (card.type) {
+            case CardType.WILD_DRAW:
+              break;
+            default:
+              break;
+          }
+
+          return {
+            hands: {
+              ...hands,
+              [activePlayer.id]: hand
+            },
+            discardPile: [...discardPile, card]
+          };
+        }),
+        dealCard: assign(({ activePlayer, hands, deck }) => {
+          const newCard = sample(deck);
+          const hand = hands[activePlayer.id];
+
+          return {
+            hands: {
+              ...hands,
+              [activePlayer.id]: [...hand, newCard]
+            },
+            deck: without(deck, newCard)
+          };
+        })
       },
       guards: {
         canGameStart: ({ players }) => players.length > 0,
         isGameOver: ({ hands }) =>
-          Object.entries(hands).some(([, hand]) => hand.length === 0)
+          Object.values(hands).some((hand) => hand.length === 0),
+        isPlayerInvalid: ({ activePlayer }, { id }) => activePlayer.id !== id,
+        isCardMissing: ({ activePlayer, hands }, { card }) => {
+          const hand = hands[activePlayer.id];
+
+          return !hand.some((handCard) => handCard.equals(card));
+        },
+        isCardInvalid: ({ discardPile }, { card }) =>
+          !last(discardPile).validPlay(card)
       }
     }
   );

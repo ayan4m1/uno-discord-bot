@@ -1,9 +1,9 @@
 import { interpret } from 'xstate';
 
-import { uno as config } from 'modules/config';
+import { Card } from 'modules/deck';
+import { isAdmin } from 'modules/discord';
 import { getLogger } from 'modules/logging';
 import { createGame } from 'modules/uno';
-import { isAdmin } from 'modules/discord';
 
 const log = getLogger('uno');
 
@@ -17,14 +17,14 @@ export default {
       return message.reply('You cannot start games.');
     }
 
-    service.send({ type: 'START' });
+    service.send('START');
   },
   stop: (message) => {
     if (!isAdmin(message.member)) {
       return message.reply('You cannot stop games.');
     }
 
-    service.send({ type: 'STOP' });
+    service.send('STOP');
   },
   status: (message) => {
     log.info(message);
@@ -45,8 +45,21 @@ export default {
   },
   hand: ({ author: { id } }) => {
     service.send({
-      type: 'REQUEST_HAND',
+      type: 'HAND_REQUEST',
       id
+    });
+  },
+  draw: ({ author: { id } }) => {
+    service.send({
+      type: 'DRAW',
+      id
+    });
+  },
+  play: ({ author: { id } }, [card]) => {
+    service.send({
+      type: 'PLAY',
+      id,
+      card: Card.fromString(card)
     });
   }
 };
