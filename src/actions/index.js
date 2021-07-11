@@ -1,5 +1,5 @@
-import * as notifyActions from 'actions/notify';
-import * as gameActions from 'actions/game';
+import notifyActions from 'actions/notify';
+import gameActions from 'actions/game';
 
 export default {
   ...notifyActions,
