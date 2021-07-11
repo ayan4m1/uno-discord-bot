@@ -57,6 +57,12 @@ export default {
       id,
       card: Card.fromString(card)
     }),
+  pass: ({ author: { id, username } }) =>
+    service.send({
+      type: 'PLAYER_PASS',
+      id,
+      username
+    }),
   color: ({ author: { id } }, [color]) =>
     service.send({
       type: 'COLOR_CHANGE',
