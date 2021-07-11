@@ -1,6 +1,5 @@
-import uno from 'handlers/uno';
+import game from 'handlers/game';
 import { connectBot, registerCommands } from 'modules/discord';
 
-registerCommands(uno);
-
+registerCommands(game);
 connectBot();

@@ -101,13 +101,13 @@ export const registerCommands = (cmds) => {
 export const isAdmin = (member) =>
   config.adminRoleIds.some((role) => member.roles.cache.has(role));
 
-export const getNotificationChannel = () => {
+const getNotificationChannel = () => {
   const guild = client.guilds.resolve(config.guildId);
 
   return guild.channels.cache.find((chan) => chan.id === config.channelId);
 };
 
-export const getPrivateMessageChannel = async (userId) => {
+const getPrivateMessageChannel = async (userId) => {
   const guild = client.guilds.resolve(config.guildId);
 
   const member = await guild.members.fetch(userId);
@@ -117,6 +117,18 @@ export const getPrivateMessageChannel = async (userId) => {
   }
 
   return member.user.dmChannel || member.user.createDM();
+};
+
+export const sendMessage = (message) => {
+  const channel = getNotificationChannel();
+
+  return channel.send(message);
+};
+
+export const sendPrivateMessage = async (userId, message) => {
+  const channel = await getPrivateMessageChannel(userId);
+
+  return channel.send(message);
 };
 
 client.on('ready', async () => {

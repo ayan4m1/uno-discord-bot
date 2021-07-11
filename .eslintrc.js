@@ -20,6 +20,7 @@ module.exports = {
   settings: {
     'import/resolver': {
       alias: [
+        ['actions', './src/actions'],
         ['handlers', './src/handlers'],
         ['modules', './src/modules']
       ]

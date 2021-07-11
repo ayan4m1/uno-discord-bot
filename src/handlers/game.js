@@ -1,13 +1,14 @@
 import { interpret } from 'xstate';
 
-import { Card } from 'modules/deck';
 import { isAdmin } from 'modules/discord';
 import { getLogger } from 'modules/logging';
-import { createGame } from 'modules/uno';
+import { createGame } from 'modules/game';
 
-const log = getLogger('uno');
+const log = getLogger('game');
 
-const service = interpret(createGame(config));
+const service = interpret(createGame()).onTransition((state) =>
+  log.debug(JSON.stringify(state.context, null, 2))
+);
 
 service.start();
 
@@ -17,18 +18,16 @@ export default {
       return message.reply('You cannot start games.');
     }
 
-    service.send('START');
+    service.send('GAME_START');
   },
   stop: (message) => {
     if (!isAdmin(message.member)) {
       return message.reply('You cannot stop games.');
     }
 
-    service.send('STOP');
+    service.send('GAME_STOP');
   },
-  status: (message) => {
-    log.info(message);
-  },
+  status: () => service.send('STATUS_SEND'),
   join: ({ author: { id, username } }) =>
     service.send({
       type: 'PLAYER_ADD',
@@ -55,7 +54,7 @@ export default {
     service.send({
       type: 'CARD_PLAY',
       id,
-      card: Card.fromString(card)
+      card
     }),
   pass: ({ author: { id, username } }) =>
     service.send({
