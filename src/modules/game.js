@@ -23,19 +23,18 @@ const toIdleAfterEnd = {
   }
 };
 
-const onStop = {
-  GAME_STOP: {
-    target: 'idle',
-    actions: 'notifyGameStop'
-  }
-};
-
 export const createGame = () =>
   createMachine(
     {
       id: 'uno',
       initial: 'idle',
       context: createContext(),
+      on: {
+        GAME_STOP: {
+          target: 'idle',
+          actions: 'notifyGameStop'
+        }
+      },
       states: {
         idle: {
           entry: 'resetGameState',
@@ -64,8 +63,7 @@ export const createGame = () =>
             },
             PLAYER_REMOVE: {
               actions: ['removePlayer', 'notifyRemovePlayer']
-            },
-            ...onStop
+            }
           }
         },
         startGame: {
@@ -128,8 +126,7 @@ export const createGame = () =>
             ],
             HAND_REQUEST: {
               actions: 'notifyHand'
-            },
-            ...onStop
+            }
           },
           initial: 'waiting',
           states: {
