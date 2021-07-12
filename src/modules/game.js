@@ -110,7 +110,7 @@ export const createGame = () =>
                 cond: 'isPlayerInvalid'
               },
               {
-                actions: ['notifyDraw', 'drawCard', 'sendActivePlayerHand']
+                actions: ['notifyDraw', 'drawCard', 'notifyActivePlayerHand']
               }
             ],
             PLAYER_PASS: [
