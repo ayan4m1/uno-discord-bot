@@ -70,7 +70,7 @@ export const createGame = () =>
         },
         startGame: {
           entry: ['notifyGameStart', 'dealHands', 'notifyAllHands'],
-          always: [{ target: 'startRound' }]
+          always: { target: 'startRound' }
         },
         startRound: {
           entry: ['activateNextPlayer', 'resetLastDrawPlayer'],
@@ -81,12 +81,6 @@ export const createGame = () =>
         },
         round: {
           entry: ['notifyActivePlayerHand', 'notifyRoundStart'],
-          after: {
-            [config.roundDelay]: {
-              target: 'startRound',
-              actions: 'notifySkipPlayer'
-            }
-          },
           on: {
             CARD_PLAY: [
               {
@@ -112,8 +106,7 @@ export const createGame = () =>
                 cond: 'isSpecialCardPlayed'
               },
               {
-                target: 'startRound',
-                actions: ['notifyPlay', 'playCard']
+                target: '.playCard'
               }
             ],
             CARD_DRAW: [
@@ -135,8 +128,7 @@ export const createGame = () =>
                 cond: 'isPassInvalid'
               },
               {
-                target: 'startRound',
-                actions: 'notifyPass'
+                target: '.pass'
               }
             ],
             HAND_REQUEST: {
@@ -146,10 +138,13 @@ export const createGame = () =>
           },
           initial: 'waiting',
           states: {
-            waiting: {},
-            specialCard: {
-              entry: 'handleSpecialCard',
-              always: [{ target: 'done' }]
+            waiting: {
+              after: {
+                [config.roundDelay]: {
+                  target: 'done',
+                  actions: 'notifySkipPlayer'
+                }
+              }
             },
             changeColor: {
               entry: 'notifyColorChangeNeeded',
@@ -180,11 +175,21 @@ export const createGame = () =>
                 ]
               }
             },
-            done: { final: true }
+            specialCard: {
+              entry: 'handleSpecialCard',
+              always: { target: 'done' }
+            },
+            playCard: {
+              entry: ['notifyPlay', 'playCard'],
+              always: { target: 'done' }
+            },
+            pass: {
+              entry: 'notifyPass',
+              always: { target: 'done' }
+            },
+            done: { type: 'final' }
           },
-          onDone: {
-            target: 'startRound'
-          }
+          onDone: 'startRound'
         },
         announceWinner: {
           entry: 'notifyWinner',
