@@ -97,7 +97,7 @@ export default {
     color: (_, { color }) => CardColor.fromString(color)
   }),
   changeColorRandom: send(() => ({
-    type: 'COLOR_CHOOSE',
+    type: 'COLOR_CHANGE',
     color: sample(['R', 'G', 'B', 'Y'])
   })),
   handleSpecialCard: assign(
