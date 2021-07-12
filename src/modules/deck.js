@@ -1,3 +1,5 @@
+import { uno as config } from 'modules/config';
+
 export const CardType = {
   NUMBER: 'number',
   WILD: 'wild',
@@ -15,11 +17,19 @@ export const CardColor = {
   fromString: (str) => Object.values(CardColor).find((val) => val[0] === str)
 };
 
+/**
+ * Represents an individual game card.
+ */
 export class Card {
   value = null;
   color = null;
   type = null;
 
+  /**
+   * Constructs a card given a string identifier (e.g. "YS" or "G1").
+   * @param {*} source Card string
+   * @returns {Card|null} Card instance, or null if an invalid string was supplied
+   */
   static fromString(source) {
     const result = new Card();
     const tokens = source.trim().toUpperCase().split('');
@@ -63,6 +73,7 @@ export class Card {
    * Constructs a card given an index between 0 and 107.
    *
    * @param {*} index Index in the deck
+   * @returns {Card|null} Card instance, or null if an invalid index was supplied
    */
   static fromIndex(index = 0) {
     const result = new Card();
@@ -129,14 +140,23 @@ export class Card {
     }
   }
 
+  toUrl(size = 'S') {
+    return `${config.cardBaseUrl}${this.toString()}_${size}.png`;
+  }
+
   /**
    * Returns a shorthand string representation of the card.
-   * @returns String describing the card
+   * @returns {string} describing the card
    */
   toString() {
     return `${this.colorCode}${this.cardCode}`;
   }
 
+  /**
+   * Determines if the supplied card is the same as this one.
+   * @param {Card} other The card to compare to
+   * @returns {boolean} True if the card is the same, false otherwise
+   */
   equals(other) {
     return (
       this.type === other.type &&
@@ -145,6 +165,11 @@ export class Card {
     );
   }
 
+  /**
+   * Determines if the supplied card is able to be played on top of this one.
+   * @param {Card} other The card to compare to
+   * @returns {boolean} True if the card can be played, false otherwise
+   */
   validPlay(other) {
     switch (other.type) {
       case CardType.WILD_DRAW:
@@ -158,6 +183,10 @@ export class Card {
   }
 }
 
+/**
+ * Create a complete game deck.
+ * @returns {Array<Card>} Array of Card objects
+ */
 export const createDeck = () =>
   Array(108)
     .fill(undefined)
