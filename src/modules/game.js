@@ -101,11 +101,6 @@ export const createGame = () =>
                 cond: 'isColorChangeNeeded'
               },
               {
-                target: '.specialCard',
-                actions: ['notifyPlay', 'playCard'],
-                cond: 'isSpecialCardPlayed'
-              },
-              {
                 target: '.playCard'
               }
             ],
@@ -172,12 +167,15 @@ export const createGame = () =>
                 ]
               }
             },
-            specialCard: {
-              entry: 'handleSpecialCard',
-              always: { target: 'done' }
-            },
             playCard: {
               entry: ['notifyPlay', 'playCard'],
+              always: [
+                { target: 'specialCard', cond: 'isSpecialCardPlayed' },
+                { target: 'done' }
+              ]
+            },
+            specialCard: {
+              entry: 'handleSpecialCard',
               always: { target: 'done' }
             },
             pass: {
