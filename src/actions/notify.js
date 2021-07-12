@@ -1,12 +1,11 @@
 import { MessageEmbed } from 'discord.js';
 import { last } from 'lodash';
+import { send } from 'xstate';
 
 import { uno as config } from 'modules/config';
-import { sendMessage } from 'modules/discord';
+import { sendMessage, sendPrivateMessage } from 'modules/discord';
 import { CardColor, CardType } from 'modules/deck';
-
-const getCardUrl = (card, size = 'S') =>
-  `${config.cardBaseUrl}${card.toString()}_${size}.png`;
+// import { createCardMontage } from 'modules/montage';
 
 export default {
   notifySolicit: () =>
@@ -45,7 +44,7 @@ export default {
 
     let embed = new MessageEmbed()
       .setTitle(`${activePlayer.username}'s turn!`)
-      .setImage(getCardUrl(discard, 'L'));
+      .setImage(discard.toUrl('L'));
 
     switch (discard.type) {
       case CardType.WILD_DRAW:
@@ -84,7 +83,7 @@ export default {
     sendMessage(
       new MessageEmbed()
         .setTitle(`${activePlayer.username} played ${card.toString()}!`)
-        .setImage(getCardUrl(card))
+        .setImage(card.toUrl())
     ),
   notifyDraw: ({ activePlayer }) =>
     sendMessage(`${activePlayer.username} drew a card!`),
@@ -97,5 +96,21 @@ export default {
   notifyColorChangeNeeded: ({ activePlayer }) =>
     sendMessage(
       `${activePlayer.username} must select a new color! Use e.g. \`?color Red\``
-    )
+    ),
+  notifyAllHands: ({ players }) =>
+    players.map((player) => send({ type: 'HAND_REQUEST', id: player.id })),
+  notifyActivePlayerHand: send(({ activePlayer }) => ({
+    type: 'HAND_REQUEST',
+    id: activePlayer.id
+  })),
+  notifyHand: async ({ hands }, { id }) => {
+    const hand = hands[id];
+    // const montage = await createCardMontage(hand);
+    const embed = new MessageEmbed()
+      .setTitle('Your Hand')
+      .setDescription(hand.map((card) => card.toString()).join(', '));
+    // .attachFiles(new MessageAttachment(montage, 'montage.png'));
+
+    await sendPrivateMessage(id, embed);
+  }
 };

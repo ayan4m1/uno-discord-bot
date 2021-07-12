@@ -3,6 +3,7 @@ import { interpret } from 'xstate';
 import { createGame } from 'modules/game';
 import { connectBot, registerCommands, isAdmin } from 'modules/discord';
 import { getLogger } from 'modules/logging';
+import { Card } from 'modules/deck';
 
 const log = getLogger('game');
 
@@ -54,7 +55,7 @@ registerCommands({
     service.send({
       type: 'CARD_PLAY',
       id,
-      card
+      card: Card.fromString(card)
     }),
   pass: ({ author: { id, username } }) =>
     service.send({

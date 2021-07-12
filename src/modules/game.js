@@ -69,7 +69,7 @@ export const createGame = () =>
           }
         },
         startGame: {
-          entry: ['notifyGameStart', 'dealHands'],
+          entry: ['notifyGameStart', 'dealHands', 'notifyAllHands'],
           always: [{ target: 'startRound' }]
         },
         startRound: {
@@ -80,7 +80,7 @@ export const createGame = () =>
           ]
         },
         round: {
-          entry: ['sendActivePlayerHand', 'notifyRoundStart'],
+          entry: ['notifyActivePlayerHand', 'notifyRoundStart'],
           after: {
             [config.roundDelay]: {
               target: 'startRound',
@@ -136,11 +136,11 @@ export const createGame = () =>
               },
               {
                 target: 'startRound',
-                actions: ['notifyPass']
+                actions: 'notifyPass'
               }
             ],
             HAND_REQUEST: {
-              actions: 'sendHand'
+              actions: 'notifyHand'
             },
             ...onStop
           },

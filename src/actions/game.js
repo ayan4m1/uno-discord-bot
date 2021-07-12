@@ -1,23 +1,10 @@
-import { MessageEmbed } from 'discord.js';
 import { send, assign } from 'xstate';
 import { sampleSize, without, sample, reverse, last } from 'lodash';
 
-import { sendMessage, sendPrivateMessage } from 'modules/discord';
+import { sendMessage } from 'modules/discord';
 import { CardColor, CardType, createDeck } from 'modules/deck';
 
 export default {
-  sendActivePlayerHand: send(({ activePlayer }) => ({
-    type: 'HAND_REQUEST',
-    id: activePlayer.id
-  })),
-  sendHand: async ({ hands }, { id }) => {
-    const hand = hands[id];
-    const embed = new MessageEmbed()
-      .setTitle('Your Hand')
-      .setDescription(hand.map((card) => card.toString()).join(', '));
-
-    await sendPrivateMessage(id, embed);
-  },
   resetGameState: assign({
     deck: createDeck(),
     color: null,
