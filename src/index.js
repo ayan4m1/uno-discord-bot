@@ -28,7 +28,7 @@ registerCommands({
 
     service.send('GAME_STOP');
   },
-  status: () => service.send('STATUS_SEND'),
+  status: () => service.send('GAME_STATUS'),
   join: ({ author: { id, username } }) =>
     service.send({
       type: 'PLAYER_ADD',

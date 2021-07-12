@@ -33,6 +33,9 @@ export const createGame = () =>
         GAME_STOP: {
           target: 'idle',
           actions: 'notifyGameStop'
+        },
+        GAME_STATUS: {
+          actions: 'notifyGameStatus'
         }
       },
       states: {
