@@ -226,7 +226,9 @@ export const createGame = () =>
               return discard.validPlay(card);
           }
         }),
-        isColorInvalid: negate((_, { color }) => CardColor.fromString(color)),
+        isColorInvalid: negate((_, { color }) =>
+          Boolean(CardColor.fromString(color))
+        ),
         isColorChangeNeeded: (_, { card }) =>
           [CardType.WILD_DRAW, CardType.WILD].includes(card.type),
         isPassInvalid: negate(
