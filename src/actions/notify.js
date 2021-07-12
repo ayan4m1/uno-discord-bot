@@ -77,6 +77,8 @@ export default {
     sendMessage(
       `You cannot play ${card.toString()} on ${last(discardPile).toString()}!`
     ),
+  notifyInvalidColor: (_, { color }) =>
+    sendMessage(`${color} is not a valid color (R, G, B, or Y)`),
   notifySkipPlayer: ({ activePlayer }) =>
     sendMessage(`Skipping ${activePlayer.username}`),
   notifyPlay: ({ activePlayer }, { card }) =>
