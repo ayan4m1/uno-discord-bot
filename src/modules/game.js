@@ -148,14 +148,11 @@ export const createGame = () =>
             },
             changeColor: {
               entry: 'notifyColorChangeNeeded',
+              exit: 'notifyColorChange',
               after: {
                 [config.roundDelay]: {
                   target: 'done',
-                  actions: [
-                    'notifySkipPlayer',
-                    'changeColorRandom',
-                    'notifyColorChange'
-                  ]
+                  actions: ['notifySkipPlayer', 'changeColorRandom']
                 }
               },
               on: {
@@ -170,7 +167,7 @@ export const createGame = () =>
                   },
                   {
                     target: 'done',
-                    actions: ['changeColor', 'notifyColorChange']
+                    actions: 'changeColor'
                   }
                 ]
               }
