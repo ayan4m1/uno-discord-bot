@@ -141,9 +141,17 @@ export default {
           };
         }
         case CardType.REVERSE: {
-          return {
-            players: reverse(players)
-          };
+          // handles special rule for two-player games
+          if (players.length === 2) {
+            return {
+              players: reverse(players),
+              activePlayer: nextPlayer
+            };
+          } else {
+            return {
+              players: reverse(players)
+            };
+          }
         }
         default:
           return {};
