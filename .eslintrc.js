@@ -21,6 +21,7 @@ module.exports = {
     'import/resolver': {
       alias: [
         ['actions', './src/actions'],
+        ['guards', './src/guards'],
         ['modules', './src/modules']
       ]
     }
