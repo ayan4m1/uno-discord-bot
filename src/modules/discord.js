@@ -1,4 +1,5 @@
 import Discord from 'discord.js';
+import { isFunction } from 'lodash';
 
 import { discord as config } from 'modules/config';
 import { getLogger } from 'modules/logging';
@@ -10,6 +11,7 @@ export const client = new Discord.Client({
   partials: ['REACTION', 'MESSAGE', 'USER', 'GUILD_MEMBER']
 });
 const commands = new Discord.Collection();
+const aliases = new Map();
 const log = getLogger('discord');
 
 export const fetchPartial = async (object) => {
@@ -37,13 +39,14 @@ const handleMessage = async (message) => {
     const [command, ...otherArgs] = args;
     const commandWord = command.replace(config.commandPrefix, '').toLowerCase();
 
-    if (!commands.has(commandWord)) {
+    if (!commands.has(commandWord) && !aliases.has(commandWord)) {
       return log.warn(
         `${author.username} tried to use an unrecognized command: ${command}!`
       );
     }
 
-    const handler = commands.get(commandWord);
+    const handler =
+      commands.get(commandWord) || commands.get(aliases.get(commandWord));
 
     return await handler(message, otherArgs);
   } catch (error) {
@@ -94,7 +97,16 @@ export const disconnectBot = () => {
 
 export const registerCommands = (cmds) => {
   for (const [command, handler] of Object.entries(cmds)) {
-    commands.set(command, handler);
+    if (isFunction(handler)) {
+      commands.set(command, handler);
+    } else {
+      commands.set(command, handler.handler);
+      if (Array.isArray(handler?.aliases)) {
+        for (const alias of handler.aliases) {
+          aliases.set(alias, command);
+        }
+      }
+    }
   }
 };
 
