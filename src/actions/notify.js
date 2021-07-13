@@ -29,23 +29,25 @@ export default {
     ),
   notifyGameStatus: ({ activePlayer, players, hands, discardPile, deck }) =>
     sendMessage(
-      new MessageEmbed()
-        .setTitle(`Game with ${players.length} players`)
-        .setDescription(
-          `Discard Pile: ${discardPile.length} cards
-          Deck: ${deck.length} cards
-          Hands:
+      players.length
+        ? new MessageEmbed()
+            .setTitle(`Game with ${players.length} players`)
+            .setDescription(
+              `Discard Pile: ${discardPile.length} cards
+      Deck: ${deck.length} cards
+      Hands:
 
-          ${Object.entries(hands)
-            .map(
-              ([id, hand]) =>
-                `${players.find((player) => player.id === id).username} - ${
-                  hand.length
-                } cards`
-            )
-            .join('\n')}`
+      ${Object.entries(hands)
+        .map(
+          ([id, hand]) =>
+            `${players.find((player) => player.id === id).username} - ${
+              hand.length
+            } cards`
         )
-        .setFooter(`Active Player: ${activePlayer.username}`)
+        .join('\n')}`
+            )
+            .setFooter(`Active Player: ${activePlayer.username}`)
+        : 'Not playing a game!'
     ),
   notifyAddPlayer: (_, event) =>
     sendMessage(
