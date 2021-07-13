@@ -194,3 +194,13 @@ export const createDeck = () =>
   Array(108)
     .fill(undefined)
     .map((_, index) => Card.fromIndex(index));
+
+export const createContext = () => ({
+  deck: createDeck(),
+  color: null,
+  discardPile: [],
+  hands: {},
+  players: [],
+  activePlayer: null,
+  lastDrawPlayer: null
+});

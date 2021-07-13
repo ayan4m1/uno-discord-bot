@@ -2,18 +2,10 @@ import { send, assign } from 'xstate';
 import { sampleSize, without, sample, reverse, last } from 'lodash';
 
 import { sendMessage } from 'modules/discord';
-import { CardColor, CardType, createDeck } from 'modules/deck';
+import { CardColor, CardType, createContext } from 'modules/deck';
 
 export default {
-  resetGameState: assign({
-    deck: createDeck(),
-    color: null,
-    discardPile: [],
-    hands: {},
-    players: [],
-    activePlayer: null,
-    lastDrawPlayer: null
-  }),
+  resetGameState: assign(createContext()),
   resetLastDrawPlayer: assign({
     lastDrawPlayer: null
   }),
