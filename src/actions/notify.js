@@ -64,6 +64,9 @@ export default {
 
     let embed = new MessageEmbed()
       .setTitle(`${activePlayer.username}'s turn!`)
+      .setDescription(
+        `You have ${config.roundDelay / 1e3} seconds to play or pass.`
+      )
       .setImage(discard.toUrl('L'));
 
     switch (discard.type) {
