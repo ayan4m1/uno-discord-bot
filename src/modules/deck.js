@@ -16,7 +16,7 @@ export const CardColor = {
   BLUE: 'Blue',
   fromString: (str) =>
     Object.values(CardColor).find(
-      (val) => val.toUpperCase() === str?.trim?.()?.toUpperCase?.()
+      (val) => val?.toUpperCase?.() === str?.trim?.()?.toUpperCase?.()
     )
 };
 
