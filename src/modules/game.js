@@ -126,7 +126,7 @@ export const createGame = () =>
                     cond: 'isPassInvalid'
                   },
                   {
-                    target: '.pass'
+                    target: 'pass'
                   }
                 ]
               }
