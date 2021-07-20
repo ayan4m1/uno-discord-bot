@@ -2,7 +2,7 @@ import { send, assign } from 'xstate';
 import { sampleSize, without, sample, reverse, last } from 'lodash';
 
 import { sendMessage } from 'modules/discord';
-import { CardType, createContext } from 'modules/deck';
+import { CardColor, CardType, createContext } from 'modules/deck';
 
 export default {
   resetGameState: assign(createContext()),
@@ -55,13 +55,13 @@ export default {
       discardPile
     };
   }),
-  playCard: assign(({ discardPile, hands, activePlayer }, { card }) => {
+  playCard: assign(async ({ discardPile, hands, activePlayer }, { card }) => {
     const hand = hands[activePlayer.id].filter(
       (handCard) => !handCard.equals(card)
     );
 
     if (hand.length === 1) {
-      sendMessage(`${activePlayer.username} has UNO!`);
+      await sendMessage(`${activePlayer.username} has UNO!`);
     }
 
     return {
@@ -86,7 +86,7 @@ export default {
     };
   }),
   changeColor: assign({
-    color: (_, { color }) => color
+    color: (_, { color }) => CardColor.fromString(color)
   }),
   changeColorRandom: send(() => ({
     type: 'COLOR_CHANGE',
