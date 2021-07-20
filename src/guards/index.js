@@ -1,9 +1,11 @@
 import { negate, last } from 'lodash';
 
+import { uno as config } from 'modules/config';
 import { CardType, CardColor } from 'modules/deck';
 
 export default {
-  canGameStart: ({ players }) => players.length > 0,
+  // debugMode allows game to start with 1 player
+  canGameStart: ({ players }) => players.length > (config.debugMode ? 0 : 1),
   isGameOver: ({ hands }) =>
     Object.values(hands).some((hand) => hand.length === 0),
   isPlayerInvalid: negate(({ activePlayer }, { id }) => activePlayer.id === id),
