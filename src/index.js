@@ -3,7 +3,6 @@ import { interpret } from 'xstate';
 import { createGame } from 'modules/game';
 import { connectBot, registerCommands, isAdmin } from 'modules/discord';
 import { getLogger } from 'modules/logging';
-import { Card, CardColor } from 'modules/deck';
 
 const log = getLogger('game');
 
@@ -69,7 +68,7 @@ registerCommands({
       service.send({
         type: 'CARD_PLAY',
         id,
-        card: Card.fromString(card)
+        card
       })
   },
   pass: {
@@ -87,7 +86,7 @@ registerCommands({
       service.send({
         type: 'COLOR_CHANGE',
         id,
-        color: CardColor.fromString(color)
+        color
       })
   }
 });
