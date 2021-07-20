@@ -26,17 +26,17 @@ export default {
   isColorInvalid: negate((_, { color }) =>
     Boolean(CardColor.fromString(color))
   ),
-  isColorChangeNeeded: (_, { card }) =>
-    [CardType.WILD_DRAW, CardType.WILD].includes(card.type),
+  isColorChangeNeeded: ({ discardPile }) =>
+    [CardType.WILD_DRAW, CardType.WILD].includes(last(discardPile).type),
   isPassInvalid: negate(
     ({ activePlayer, lastDrawPlayer }) => activePlayer.id === lastDrawPlayer?.id
   ),
-  isSpecialCardPlayed: (_, { card }) =>
+  isSpecialCardPlayed: ({ discardPile }) =>
     [
       CardType.WILD_DRAW,
       CardType.WILD,
       CardType.DRAW,
       CardType.SKIP,
       CardType.REVERSE
-    ].includes(card.type)
+    ].includes(last(discardPile).type)
 };

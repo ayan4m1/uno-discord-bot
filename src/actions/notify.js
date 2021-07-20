@@ -106,12 +106,15 @@ export default {
     sendMessage(`${color} is not a valid color (R, G, B, or Y)`),
   notifySkipPlayer: ({ activePlayer }) =>
     sendMessage(`Skipping ${activePlayer.username}`),
-  notifyPlay: ({ activePlayer }, { card }) =>
-    sendMessage(
+  notifyPlay: ({ activePlayer, discardPile }) => {
+    const card = last(discardPile);
+
+    return sendMessage(
       new MessageEmbed()
         .setTitle(`${activePlayer.username} played ${card.toString()}!`)
         .setImage(card.toUrl())
-    ),
+    );
+  },
   notifyDraw: ({ activePlayer }) =>
     sendMessage(`${activePlayer.username} drew a card!`),
   notifyPass: ({ activePlayer }) =>

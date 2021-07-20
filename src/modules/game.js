@@ -87,11 +87,6 @@ export const createGame = () =>
                 cond: 'isCardInvalid'
               },
               {
-                target: '.changeColor',
-                actions: ['notifyPlay', 'playCard'],
-                cond: 'isColorChangeNeeded'
-              },
-              {
                 target: '.playCard'
               }
             ],
@@ -101,35 +96,54 @@ export const createGame = () =>
                 cond: 'isPlayerInvalid'
               },
               {
-                actions: ['notifyDraw', 'drawCard', 'notifyActivePlayerHand']
-              }
-            ],
-            PLAYER_PASS: [
-              {
-                actions: 'notifyInvalidPlayer',
-                cond: 'isPlayerInvalid'
-              },
-              {
-                actions: 'notifyInvalidPass',
-                cond: 'isPassInvalid'
-              },
-              {
-                target: '.pass'
+                target: '.drawCard'
               }
             ],
             HAND_REQUEST: {
               actions: 'notifyHand'
             }
           },
-          initial: 'waiting',
+          initial: 'idle',
           states: {
-            waiting: {
+            idle: {
               after: {
                 [config.roundDelay]: {
                   target: 'done',
                   actions: 'notifySkipPlayer'
                 }
               }
+            },
+            drawCard: {
+              entry: ['drawCard', 'notifyDraw', 'notifyActivePlayerHand'],
+              on: {
+                PLAYER_PASS: [
+                  {
+                    actions: 'notifyInvalidPlayer',
+                    cond: 'isPlayerInvalid'
+                  },
+                  {
+                    actions: 'notifyInvalidPass',
+                    cond: 'isPassInvalid'
+                  },
+                  {
+                    target: '.pass'
+                  }
+                ]
+              }
+            },
+            playCard: {
+              entry: ['playCard', 'notifyPlay'],
+              always: [
+                { target: 'specialCard', cond: 'isSpecialCardPlayed' },
+                { target: 'done' }
+              ]
+            },
+            specialCard: {
+              entry: 'handleSpecialCard',
+              always: [
+                { target: 'changeColor', cond: 'isColorChangeNeeded' },
+                { target: 'done' }
+              ]
             },
             changeColor: {
               entry: 'notifyColorChangeNeeded',
@@ -156,17 +170,6 @@ export const createGame = () =>
                   }
                 ]
               }
-            },
-            playCard: {
-              entry: ['notifyPlay', 'playCard'],
-              always: [
-                { target: 'specialCard', cond: 'isSpecialCardPlayed' },
-                { target: 'done' }
-              ]
-            },
-            specialCard: {
-              entry: 'handleSpecialCard',
-              always: { target: 'done' }
             },
             pass: {
               entry: 'notifyPass',
