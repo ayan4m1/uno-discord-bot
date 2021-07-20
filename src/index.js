@@ -3,7 +3,7 @@ import { interpret } from 'xstate';
 import { createGame } from 'modules/game';
 import { connectBot, registerCommands, isAdmin } from 'modules/discord';
 import { getLogger } from 'modules/logging';
-import { Card } from 'modules/deck';
+import { Card, CardColor } from 'modules/deck';
 
 const log = getLogger('game');
 
@@ -87,7 +87,7 @@ registerCommands({
       service.send({
         type: 'COLOR_CHANGE',
         id,
-        color
+        color: CardColor.fromString(color)
       })
   }
 });

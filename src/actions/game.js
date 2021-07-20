@@ -2,7 +2,7 @@ import { send, assign } from 'xstate';
 import { sampleSize, without, sample, reverse, last } from 'lodash';
 
 import { sendMessage } from 'modules/discord';
-import { CardColor, CardType, createContext } from 'modules/deck';
+import { CardType, createContext } from 'modules/deck';
 
 export default {
   resetGameState: assign(createContext()),
@@ -86,7 +86,7 @@ export default {
     };
   }),
   changeColor: assign({
-    color: (_, { color }) => CardColor.fromString(color)
+    color: (_, { color }) => color
   }),
   changeColorRandom: send(() => ({
     type: 'COLOR_CHANGE',
