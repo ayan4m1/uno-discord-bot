@@ -30,7 +30,7 @@ registerCommands({
   },
   status: () => service.send('GAME_STATUS'),
   join: {
-    aliases: ['j', 'jo'],
+    aliases: ['j', 'jo', 'jn'],
     handler: ({ author: { id, username } }) =>
       service.send({
         type: 'PLAYER_ADD',
@@ -73,7 +73,7 @@ registerCommands({
       })
   },
   pass: {
-    aliases: ['pa'],
+    aliases: ['pa', 'pas'],
     handler: ({ author: { id, username } }) =>
       service.send({
         type: 'PLAYER_PASS',
@@ -82,7 +82,7 @@ registerCommands({
       })
   },
   color: {
-    aliases: ['c', 'col', 'clr'],
+    aliases: ['c', 'co', 'col', 'clr'],
     handler: ({ author: { id } }, [color]) =>
       service.send({
         type: 'COLOR_CHANGE',
