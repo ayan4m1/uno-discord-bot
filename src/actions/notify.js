@@ -80,9 +80,12 @@ export default {
     switch (discard.type) {
       case CardType.WILD_DRAW:
       case CardType.WILD:
-        embed = embed
-          .setColor(color.toUpperCase())
-          .setDescription(`Color is ${color.toLowerCase()}`);
+        // todo: Need to implement handling for when WILD is the first discard!
+        if (color) {
+          embed = embed
+            .setColor(color.toUpperCase())
+            .setDescription(`Color is ${color.toLowerCase()}`);
+        }
         break;
       default:
         break;

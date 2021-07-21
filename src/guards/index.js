@@ -18,7 +18,7 @@ export default {
     switch (discard.type) {
       case CardType.WILD:
       case CardType.WILD_DRAW:
-        return card.color === color;
+        return card?.color === color;
       default:
         return discard.validPlay(card);
     }

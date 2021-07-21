@@ -16,7 +16,7 @@ export const CardColor = {
   BLUE: 'Blue',
   fromString: (str) =>
     Object.values(CardColor).find(
-      (val) => val?.toUpperCase?.() === str?.trim?.()?.toUpperCase?.()
+      (val) => val?.toUpperCase?.()[0] === str?.trim?.()?.toUpperCase?.()[0]
     )
 };
 
@@ -174,6 +174,10 @@ export class Card {
    * @returns {boolean} True if the card can be played, false otherwise
    */
   validPlay(other) {
+    if (!other.type) {
+      return false;
+    }
+
     switch (other.type) {
       case CardType.WILD_DRAW:
       case CardType.WILD:
