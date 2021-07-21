@@ -9,11 +9,9 @@ export default {
   isGameOver: ({ hands }) =>
     Object.values(hands).some((hand) => hand.length === 0),
   isPlayerInvalid: negate(({ activePlayer }, { id }) => activePlayer.id === id),
-  isCardMissing: negate(({ activePlayer, hands }, { card }) => {
-    const hand = hands[activePlayer.id];
-
-    return hand.some((handCard) => handCard.equals(card));
-  }),
+  isCardMissing: negate(({ activePlayer, hands }, { card }) =>
+    hands[activePlayer.id].some((handCard) => handCard.equals(card))
+  ),
   isCardInvalid: negate(({ color, discardPile }, { card }) => {
     const discard = last(discardPile);
 
