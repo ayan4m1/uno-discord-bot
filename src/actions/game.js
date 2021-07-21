@@ -86,7 +86,7 @@ export default {
     };
   }),
   changeColor: assign({
-    color: (_, { color }) => CardColor.fromString(color)
+    color: (_, { color }) => color
   }),
   changeColorRandom: send(() => ({
     type: 'COLOR_CHANGE',
