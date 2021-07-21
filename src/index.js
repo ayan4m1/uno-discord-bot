@@ -14,21 +14,30 @@ const service = interpret(createGame()).onTransition((state) =>
 service.start();
 
 registerCommands({
-  start: (message) => {
-    if (!isAdmin(message.member)) {
-      return message.reply('You cannot start games.');
-    }
+  start: {
+    aliases: ['str', 'strt'],
+    handler: (message) => {
+      if (!isAdmin(message.member)) {
+        return message.reply('You cannot start games.');
+      }
 
-    service.send('GAME_START');
-  },
-  stop: (message) => {
-    if (!isAdmin(message.member)) {
-      return message.reply('You cannot stop games.');
+      service.send('GAME_START');
     }
-
-    service.send('GAME_STOP');
   },
-  status: () => service.send('GAME_STATUS'),
+  stop: {
+    aliases: ['stp', 'sto'],
+    handler: (message) => {
+      if (!isAdmin(message.member)) {
+        return message.reply('You cannot stop games.');
+      }
+
+      service.send('GAME_STOP');
+    }
+  },
+  status: {
+    aliases: ['sta', 'stat', 'stats'],
+    handler: () => service.send('GAME_STATUS')
+  },
   join: {
     aliases: ['j', 'jo', 'jn'],
     handler: ({ author: { id, username } }) =>
