@@ -1,4 +1,4 @@
-import { uno as config } from 'modules/config';
+import { uno as config } from './config.js';
 
 export const CardType = {
   NUMBER: 'number',

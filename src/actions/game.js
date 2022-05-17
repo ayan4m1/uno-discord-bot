@@ -1,8 +1,8 @@
 import { send, assign } from 'xstate';
-import { sampleSize, without, sample, reverse, last } from 'lodash';
+import { sampleSize, without, sample, reverse, last } from 'lodash-es';
 
-import { sendMessage } from 'modules/discord';
-import { CardColor, CardType, createContext } from 'modules/deck';
+import { sendMessage } from '../modules/discord.js';
+import { CardColor, CardType, createContext } from '../modules/deck.js';
 
 export default {
   resetGameState: assign(createContext()),

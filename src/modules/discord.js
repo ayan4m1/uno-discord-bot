@@ -1,16 +1,18 @@
-import Discord from 'discord.js';
-import { isFunction } from 'lodash';
+import { Client, Collection, Intents } from 'discord.js';
+import { isFunction } from 'lodash-es';
 
-import { discord as config } from 'modules/config';
-import { getLogger } from 'modules/logging';
+import { discord as config } from './config.js';
+import { getLogger } from './logging.js';
 
-export const client = new Discord.Client({
-  ws: {
-    intents: ['GUILD_MEMBERS', 'GUILDS', 'GUILD_MESSAGES', 'DIRECT_MESSAGES']
-  },
-  partials: ['REACTION', 'MESSAGE', 'USER', 'GUILD_MEMBER']
+export const client = new Client({
+  intents: [
+    Intents.FLAGS.GUILD_MEMBERS,
+    Intents.FLAGS.GUILDS,
+    Intents.FLAGS.GUILD_MESSAGES,
+    Intents.FLAGS.DIRECT_MESSAGES
+  ]
 });
-const commands = new Discord.Collection();
+const commands = new Collection();
 const aliases = new Map();
 const log = getLogger('discord');
 
@@ -131,10 +133,22 @@ const getPrivateMessageChannel = async (userId) => {
   return member.user.dmChannel || member.user.createDM();
 };
 
+export const sendEmbed = (embed) => {
+  const channel = getNotificationChannel();
+
+  return channel.send({ embeds: [embed] });
+};
+
 export const sendMessage = (message) => {
   const channel = getNotificationChannel();
 
-  return channel.send(message);
+  return channel.send({ content: message });
+};
+
+export const sendPrivateEmbed = async (userId, embed) => {
+  const channel = await getPrivateMessageChannel(userId);
+
+  return channel.send({ embeds: [embed] });
 };
 
 export const sendPrivateMessage = async (userId, message) => {
@@ -144,7 +158,7 @@ export const sendPrivateMessage = async (userId, message) => {
 };
 
 client.on('ready', async () => {
-  const guilds = client.guilds.cache.array();
+  const guilds = [...client.guilds.cache.values()];
 
   log.info(`Bot is connected to Discord, tracking ${guilds.length} servers!`);
 

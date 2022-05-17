@@ -1,6 +1,6 @@
 import { Container, format, transports } from 'winston';
 
-import { logging as config } from 'modules/config';
+import { logging as config } from './config.js';
 
 const { combine, label, prettyPrint, printf, timestamp } = format;
 

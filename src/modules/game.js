@@ -1,9 +1,9 @@
 import { createMachine } from 'xstate';
 
-import actions from 'actions';
-import guards from 'guards';
-import { uno as config } from 'modules/config';
-import { createContext } from 'modules/deck';
+import actions from '../actions/index.js';
+import guards from '../guards/index.js';
+import { uno as config } from './config.js';
+import { createContext } from './deck.js';
 
 const toIdleAfterEnd = {
   after: {

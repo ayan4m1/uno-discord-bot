@@ -1,28 +1,33 @@
 import { MessageEmbed } from 'discord.js';
-import { last } from 'lodash';
+import { last } from 'lodash-es';
 import { send } from 'xstate';
 
-import { uno as config } from 'modules/config';
-import { sendMessage, sendPrivateMessage } from 'modules/discord';
-import { CardColor, CardType } from 'modules/deck';
+import { uno as config } from '../modules/config.js';
+import {
+  sendEmbed,
+  sendMessage,
+  sendPrivateEmbed
+} from '../modules/discord.js';
+import { CardColor, CardType } from '../modules/deck.js';
 // import { createCardMontage } from 'modules/montage';
 
 export default {
   notifySolicit: async () =>
-    await sendMessage(
+    await sendEmbed(
       new MessageEmbed().setTitle('Join Uno!').setDescription(
         `Say \`?join\` to join the game!
-      Starting in ${config.solicitDelay / 1e3} seconds...`
+
+Starting in ${config.solicitDelay / 1e3} seconds...`
       )
     ),
   notifyGameStart: async ({ players }) =>
-    await sendMessage(
+    await sendEmbed(
       new MessageEmbed()
         .setTitle('Game starting!')
         .setDescription(`Dealing cards to ${players.length} players...`)
     ),
   notifyGameStop: async () =>
-    await sendMessage(
+    await sendEmbed(
       new MessageEmbed()
         .setTitle('Game stopped!')
         .setDescription('The game was aborted.')
@@ -34,7 +39,7 @@ export default {
     discardPile,
     deck
   }) =>
-    await sendMessage(
+    await sendEmbed(
       players.length
         ? new MessageEmbed()
             .setTitle(`Game with ${players.length} players`)
@@ -53,16 +58,16 @@ export default {
         .join('\n')}`
             )
             .setFooter(`Active Player: ${activePlayer.username}`)
-        : 'Not playing a game!'
+        : new MessageEmbed().setDescription('Not playing a game!')
     ),
   notifyAddPlayer: async (_, event) =>
-    await sendMessage(
+    await sendEmbed(
       new MessageEmbed()
         .setTitle('New player!')
         .setDescription(`${event.username} has joined the game!`)
     ),
   notifyRemovePlayer: async (_, event) =>
-    await sendMessage(
+    await sendEmbed(
       new MessageEmbed()
         .setTitle('Lost player!')
         .setDescription(`${event.username} has left the game!`)
@@ -91,7 +96,7 @@ export default {
         break;
     }
 
-    return await sendMessage(embed);
+    return await sendEmbed(embed);
   },
   notifyNoPlayers: async () =>
     await sendMessage('Cancelled the game because no players joined!'),
@@ -121,7 +126,7 @@ export default {
   notifyPlay: async ({ activePlayer, discardPile }) => {
     const card = last(discardPile);
 
-    return await sendMessage(
+    return await sendEmbed(
       new MessageEmbed()
         .setTitle(`${activePlayer.username} played ${card.toString()}!`)
         .setImage(card.toUrl())
@@ -153,6 +158,6 @@ export default {
       .setDescription(hand.map((card) => card.toString()).join(', '));
     // .attachFiles(new MessageAttachment(montage, 'montage.png'));
 
-    return await sendPrivateMessage(id, embed);
+    return await sendPrivateEmbed(id, embed);
   }
 };

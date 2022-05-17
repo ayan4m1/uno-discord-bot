@@ -1,9 +1,9 @@
 import { interpret } from 'xstate';
 
-import { createGame } from 'modules/game';
-import { connectBot, registerCommands, isAdmin } from 'modules/discord';
-import { Card, CardColor } from 'modules/deck';
-import { getLogger } from 'modules/logging';
+import { createGame } from './modules/game.js';
+import { connectBot, registerCommands, isAdmin } from './modules/discord.js';
+import { Card, CardColor } from './modules/deck.js';
+import { getLogger } from './modules/logging.js';
 
 const log = getLogger('game');
 

@@ -1,5 +1,5 @@
-import notifyActions from 'actions/notify';
-import gameActions from 'actions/game';
+import notifyActions from './notify.js';
+import gameActions from './game.js';
 
 export default {
   ...notifyActions,

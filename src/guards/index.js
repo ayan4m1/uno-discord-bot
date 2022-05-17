@@ -1,7 +1,7 @@
-import { negate, last } from 'lodash';
+import { negate, last } from 'lodash-es';
 
-import { uno as config } from 'modules/config';
-import { CardType, CardColor } from 'modules/deck';
+import { uno as config } from '../modules/config.js';
+import { CardType, CardColor } from '../modules/deck.js';
 
 export default {
   // debugMode allows game to start with 1 player
