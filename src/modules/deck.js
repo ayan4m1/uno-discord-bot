@@ -16,6 +16,13 @@ export const CardColor = {
   BLUE: 'Blue'
 };
 
+export const hexColors = {
+  [CardColor.RED]: '#ff0000',
+  [CardColor.BLUE]: '#0000ff',
+  [CardColor.GREEN]: '#00ff00',
+  [CardColor.YELLOW]: '#ffff00'
+};
+
 export const getCardColor = (str) =>
   Object.values(CardColor).find(
     (val) => val?.toUpperCase?.()[0] === str?.trim?.()?.toUpperCase?.()[0]

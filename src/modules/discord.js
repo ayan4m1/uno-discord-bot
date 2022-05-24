@@ -145,10 +145,10 @@ export const sendMessage = (message) => {
   return channel.send({ content: message });
 };
 
-export const sendPrivateEmbed = async (userId, embed) => {
+export const sendPrivateEmbed = async (userId, embed, files = []) => {
   const channel = await getPrivateMessageChannel(userId);
 
-  return channel.send({ embeds: [embed] });
+  return channel.send({ embeds: [embed], files });
 };
 
 export const sendPrivateMessage = async (userId, message) => {

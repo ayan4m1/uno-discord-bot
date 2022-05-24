@@ -107,8 +107,7 @@ export const createGame = () =>
             idle: {
               after: {
                 [config.roundDelay]: {
-                  target: 'done',
-                  actions: 'notifySkipPlayer'
+                  target: 'notifySkip'
                 }
               }
             },
@@ -125,7 +124,7 @@ export const createGame = () =>
                     cond: 'isPassInvalid'
                   },
                   {
-                    target: 'pass'
+                    target: 'notifyPass'
                   }
                 ]
               }
@@ -161,22 +160,24 @@ export const createGame = () =>
             },
             checkColor: {
               always: [
-                { target: 'changeColor', cond: 'isColorChangeNeeded' },
+                {
+                  target: 'changeColorNeeded',
+                  cond: 'isColorChangeNeeded'
+                },
                 { target: 'done' }
               ]
             },
-            notifyChangeColor: {
+            changeColorNeeded: {
               invoke: {
                 src: 'notifyColorChangeNeeded',
                 onDone: 'changeColor'
               }
             },
             changeColor: {
-              exit: 'notifyColorChange',
               after: {
                 [config.roundDelay]: {
-                  target: 'done',
-                  actions: ['notifySkipPlayer', 'changeColorRandom']
+                  target: 'notifySkip',
+                  actions: ['changeColorRandom']
                 }
               },
               on: {
@@ -190,15 +191,29 @@ export const createGame = () =>
                     cond: 'isColorInvalid'
                   },
                   {
-                    target: 'done',
+                    target: 'notifyChangeColor',
                     actions: 'changeColor'
                   }
                 ]
               }
             },
-            pass: {
-              entry: 'notifyPass',
-              always: { target: 'done' }
+            notifyChangeColor: {
+              invoke: {
+                src: 'notifyColorChange',
+                onDone: 'done'
+              }
+            },
+            notifyPass: {
+              invoke: {
+                src: 'notifyPass',
+                onDone: 'done'
+              }
+            },
+            notifySkip: {
+              invoke: {
+                src: 'notifySkipPlayer',
+                onDone: 'done'
+              }
             },
             done: { type: 'final' }
           },

@@ -3,46 +3,34 @@ import { last } from 'lodash-es';
 
 import { uno as config } from '../modules/config.js';
 import { sendEmbed, sendMessage } from '../modules/discord.js';
-import { CardColor, getCardColor, CardType } from '../modules/deck.js';
+import { CardType, hexColors, getCardColor } from '../modules/deck.js';
 
 export default {
   notifyRoundStart: ({ color, discardPile, activePlayer }) => {
     const discard = last(discardPile);
 
+    let hexColor;
+
+    if (color && !discard.color) {
+      hexColor = hexColors[color];
+    } else if (discard.color) {
+      hexColor = hexColors[discard.color];
+    }
+
     let embed = new MessageEmbed()
+      .setColor(hexColor)
       .setTitle(`${activePlayer.username}'s turn!`)
       .setDescription(
         `You have ${config.roundDelay / 1e3} seconds to \`?play\` or \`?pass\`.`
       )
-      .setImage(discard.toUrl('L'));
+      .setImage(discard.toUrl('M'));
 
     switch (discard.type) {
       case CardType.WILD_DRAW:
       case CardType.WILD:
         // todo: Need to implement handling for when WILD is the first discard!
         if (color) {
-          let hexColor;
-
-          switch (color) {
-            case CardColor.BLUE:
-              hexColor = '#0000ff';
-              break;
-            case CardColor.GREEN:
-              hexColor = '#00ff00';
-              break;
-            case CardColor.RED:
-              hexColor = '#ff0000';
-              break;
-            case CardColor.YELLOW:
-              hexColor = '#ffff00';
-              break;
-            default:
-              hexColor = '#000000';
-          }
-
-          embed = embed
-            .setColor(hexColor)
-            .setDescription(`Color is ${color.toLowerCase()}`);
+          embed = embed.setDescription(`Color is ${color.toLowerCase()}`);
         }
         break;
       default:
@@ -67,5 +55,23 @@ export default {
   notifyColorChangeNeeded: ({ activePlayer }) =>
     sendMessage(
       `${activePlayer.username} must select a new color! Use e.g. \`?color Red\``
-    )
+    ),
+  notifyUno: ({ activePlayer }) =>
+    sendEmbed(
+      new MessageEmbed()
+        .setTitle(`${activePlayer.username} has UNO!`)
+        .setDescription(`Watch out for ${activePlayer.username}!`)
+    ),
+  notifyWinner: ({ players, hands }) => {
+    const [winnerId] = Object.entries(hands).find(
+      ([, hand]) => hand.length === 0
+    );
+    const winner = players.find((player) => player.id === winnerId);
+
+    return sendMessage(`${winner.username} is the winner!`);
+  },
+  notifyPass: ({ activePlayer }) =>
+    sendMessage(`${activePlayer.username} passed!`),
+  notifySkipPlayer: ({ activePlayer }) =>
+    sendMessage(`Skipping ${activePlayer.username}`)
 };

@@ -1,4 +1,4 @@
-import { MessageEmbed } from 'discord.js';
+import { MessageEmbed, MessageAttachment } from 'discord.js';
 import { last } from 'lodash-es';
 import { send, actions } from 'xstate';
 
@@ -8,7 +8,7 @@ import {
   sendMessage,
   sendPrivateEmbed
 } from '../modules/discord.js';
-// import { createCardMontage } from '../modules/montage.js';
+import { createCardMontage } from '../modules/montage.js';
 
 const { pure } = actions;
 
@@ -67,14 +67,6 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
         .setTitle('Lost player!')
         .setDescription(`${event.username} has left the game!`)
     ),
-  notifyWinner: ({ players, hands }) => {
-    const [winnerId] = Object.entries(hands).find(
-      ([, hand]) => hand.length === 0
-    );
-    const winner = players.find((player) => player.id === winnerId);
-
-    return sendMessage(`${winner.username} is the winner!`);
-  },
   notifyInvalidPlayer: () => sendMessage("It's not your turn!"),
   notifyInvalidPass: () =>
     sendMessage("You can't pass without first drawing a card using `?draw`."),
@@ -85,12 +77,8 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
     ),
   notifyInvalidColor: (_, { color }) =>
     sendMessage(`${color} is not a valid color (R, G, B, or Y)`),
-  notifySkipPlayer: ({ activePlayer }) =>
-    sendMessage(`Skipping ${activePlayer.username}`),
   notifyDraw: ({ activePlayer }) =>
     sendMessage(`${activePlayer.username} drew a card!`),
-  notifyPass: ({ activePlayer }) =>
-    sendMessage(`${activePlayer.username} passed!`),
   notifyAllHands: pure(({ players }) =>
     players.map((player) => send({ type: 'HAND_REQUEST', id: player.id }))
   ),
@@ -98,16 +86,16 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
     type: 'HAND_REQUEST',
     id: activePlayer.id
   })),
-  notifyHand: ({ hands }, { id }) => {
+  notifyHand: async ({ hands }, { id }) => {
     const hand = hands[id];
-    // const montage = await createCardMontage(hand);
+    const montage = await createCardMontage(hand);
     const embed = new MessageEmbed()
       .setTitle('Your Hand')
-      .setDescription(hand.map((card) => card.toString()).join(', '));
-    // .attachFiles(new MessageAttachment(montage, 'montage.png'));
+      .setDescription(hand.map((card) => card.toString()).join(', '))
+      .setImage('attachment://hand.png');
 
-    return sendPrivateEmbed(id, embed);
-  },
-  notifyUno: ({ activePlayer }) =>
-    sendMessage(`${activePlayer.username} has UNO!`)
+    return sendPrivateEmbed(id, embed, [
+      new MessageAttachment(montage, 'hand.png')
+    ]);
+  }
 };
