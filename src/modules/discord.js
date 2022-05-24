@@ -170,4 +170,4 @@ client.on('ready', async () => {
 });
 
 // command processor
-client.on('message', handleMessage);
+client.on('messageCreate', handleMessage);

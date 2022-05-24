@@ -1,7 +1,7 @@
 import { negate, last } from 'lodash-es';
 
 import { uno as config } from '../modules/config.js';
-import { CardType, CardColor } from '../modules/deck.js';
+import { CardType, getCardColor } from '../modules/deck.js';
 
 export default {
   // debugMode allows game to start with 1 player
@@ -18,14 +18,16 @@ export default {
     switch (discard.type) {
       case CardType.WILD:
       case CardType.WILD_DRAW:
-        return card?.color === color;
+        return (
+          card?.color === color ||
+          card?.type === CardType.WILD ||
+          card?.type === CardType.WILD_DRAW
+        );
       default:
         return discard.validPlay(card);
     }
   }),
-  isColorInvalid: negate((_, { color }) =>
-    Boolean(CardColor.fromString(color))
-  ),
+  isColorInvalid: negate((_, { color }) => Boolean(getCardColor(color))),
   isColorChangeNeeded: ({ discardPile }) =>
     [CardType.WILD_DRAW, CardType.WILD].includes(last(discardPile).type),
   isPassInvalid: negate(
@@ -38,5 +40,6 @@ export default {
       CardType.DRAW,
       CardType.SKIP,
       CardType.REVERSE
-    ].includes(last(discardPile).type)
+    ].includes(last(discardPile).type),
+  playerHasUno: ({ hands, activePlayer }) => hands[activePlayer.id].length === 1
 };

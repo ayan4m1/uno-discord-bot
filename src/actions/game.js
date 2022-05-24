@@ -1,7 +1,6 @@
 import { send, assign } from 'xstate';
 import { sampleSize, without, sample, reverse, last } from 'lodash-es';
 
-import { sendMessage } from '../modules/discord.js';
 import { CardColor, CardType, createContext } from '../modules/deck.js';
 
 export default {
@@ -55,14 +54,13 @@ export default {
       discardPile
     };
   }),
-  playCard: assign(async ({ discardPile, hands, activePlayer }, { card }) => {
-    const hand = hands[activePlayer.id].filter(
-      (handCard) => !handCard.equals(card)
-    );
+  playCard: assign(({ discardPile, hands, activePlayer }, { card }) => {
+    const hand = [...hands[activePlayer.id]];
 
-    if (hand.length === 1) {
-      await sendMessage(`${activePlayer.username} has UNO!`);
-    }
+    hand.splice(
+      hand.findIndex((handCard) => handCard.equals(card)),
+      1
+    );
 
     return {
       hands: {

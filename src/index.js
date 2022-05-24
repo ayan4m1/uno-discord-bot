@@ -2,14 +2,14 @@ import { interpret } from 'xstate';
 
 import { createGame } from './modules/game.js';
 import { connectBot, registerCommands, isAdmin } from './modules/discord.js';
-import { Card, CardColor } from './modules/deck.js';
+import { Card, getCardColor } from './modules/deck.js';
 import { getLogger } from './modules/logging.js';
 
 const log = getLogger('game');
 
-const service = interpret(createGame()).onTransition((state) =>
-  log.debug(JSON.stringify(state.context, null, 2))
-);
+const service = interpret(createGame()).onTransition((state) => {
+  log.debug(JSON.stringify(state.context, null, 2));
+});
 
 service.start();
 
@@ -96,7 +96,7 @@ registerCommands({
       service.send({
         type: 'COLOR_CHANGE',
         id,
-        color: CardColor.fromString(color)
+        color: getCardColor(color)
       })
   }
 });

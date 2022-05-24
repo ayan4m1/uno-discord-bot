@@ -2,16 +2,9 @@ import { createMachine } from 'xstate';
 
 import actions from '../actions/index.js';
 import guards from '../guards/index.js';
+import services from '../services/index.js';
 import { uno as config } from './config.js';
 import { createContext } from './deck.js';
-
-const toIdleAfterEnd = {
-  after: {
-    [config.endDelay]: {
-      target: 'idle'
-    }
-  }
-};
 
 export const createGame = () =>
   createMachine(
@@ -60,18 +53,24 @@ export const createGame = () =>
           }
         },
         startGame: {
-          entry: ['notifyGameStart', 'dealHands', 'notifyAllHands'],
-          always: { target: 'startRound' }
+          entry: ['dealHands'],
+          always: [{ target: 'startRound' }]
         },
         startRound: {
           entry: ['activateNextPlayer', 'resetLastDrawPlayer'],
           always: [
             { target: 'announceWinner', cond: 'isGameOver' },
-            { target: 'round' }
+            { target: 'notifyRound' }
           ]
         },
+        notifyRound: {
+          invoke: {
+            src: 'notifyRoundStart',
+            onDone: 'round'
+          }
+        },
         round: {
-          entry: ['notifyActivePlayerHand', 'notifyRoundStart'],
+          entry: ['notifyActivePlayerHand'],
           on: {
             CARD_PLAY: [
               {
@@ -132,21 +131,47 @@ export const createGame = () =>
               }
             },
             playCard: {
-              entry: ['playCard', 'notifyPlay'],
+              entry: ['playCard'],
+              invoke: {
+                src: 'notifyPlay',
+                onDone: 'checkUno'
+              }
+            },
+            checkUno: {
+              always: [
+                { target: 'uno', cond: 'playerHasUno' },
+                { target: 'checkSpecial' }
+              ]
+            },
+            uno: {
+              invoke: {
+                src: 'notifyUno',
+                onDone: 'checkSpecial'
+              }
+            },
+            checkSpecial: {
               always: [
                 { target: 'specialCard', cond: 'isSpecialCardPlayed' },
-                { target: 'done' }
+                { target: 'checkColor' }
               ]
             },
             specialCard: {
               entry: 'handleSpecialCard',
+              always: [{ target: 'checkColor' }]
+            },
+            checkColor: {
               always: [
                 { target: 'changeColor', cond: 'isColorChangeNeeded' },
                 { target: 'done' }
               ]
             },
+            notifyChangeColor: {
+              invoke: {
+                src: 'notifyColorChangeNeeded',
+                onDone: 'changeColor'
+              }
+            },
             changeColor: {
-              entry: 'notifyColorChangeNeeded',
               exit: 'notifyColorChange',
               after: {
                 [config.roundDelay]: {
@@ -180,20 +205,29 @@ export const createGame = () =>
           onDone: 'startRound'
         },
         announceWinner: {
-          entry: 'notifyWinner',
-          ...toIdleAfterEnd
+          invoke: {
+            src: 'notifyWinner',
+            onDone: 'idle'
+          }
         },
         noPlayers: {
-          entry: 'notifyNoPlayers',
-          ...toIdleAfterEnd
+          invoke: {
+            src: 'notifyNoPlayers',
+            onDone: 'idle'
+          }
         },
         stopGame: {
-          ...toIdleAfterEnd
+          after: {
+            [config.endDelay]: {
+              target: 'idle'
+            }
+          }
         }
       }
     },
     {
       actions,
-      guards
+      guards,
+      services
     }
   );

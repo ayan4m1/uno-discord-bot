@@ -13,12 +13,13 @@ export const CardColor = {
   RED: 'Red',
   YELLOW: 'Yellow',
   GREEN: 'Green',
-  BLUE: 'Blue',
-  fromString: (str) =>
-    Object.values(CardColor).find(
-      (val) => val?.toUpperCase?.()[0] === str?.trim?.()?.toUpperCase?.()[0]
-    )
+  BLUE: 'Blue'
 };
+
+export const getCardColor = (str) =>
+  Object.values(CardColor).find(
+    (val) => val?.toUpperCase?.()[0] === str?.trim?.()?.toUpperCase?.()[0]
+  );
 
 /**
  * Represents an individual game card.
@@ -51,7 +52,7 @@ export class Card {
       return result;
     }
 
-    result.color = CardColor.fromString(tokens[0]);
+    result.color = getCardColor(tokens[0]);
 
     switch (tokens[1]) {
       case 'D':
@@ -185,7 +186,7 @@ export class Card {
       case CardType.NUMBER:
         return this.color === other.color || this.value === other.value;
       default:
-        return this.color === other.color;
+        return this.color === other.color || this.type === other.type;
     }
   }
 }
