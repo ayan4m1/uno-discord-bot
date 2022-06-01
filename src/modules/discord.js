@@ -1,5 +1,5 @@
 import { Client, Collection, Intents } from 'discord.js';
-import { isFunction } from 'lodash-es';
+import { readdirSync } from 'fs';
 
 import { discord as config } from './config.js';
 import { getLogger } from './logging.js';
@@ -12,53 +12,55 @@ export const client = new Client({
     Intents.FLAGS.DIRECT_MESSAGES
   ]
 });
-const commands = new Collection();
-const aliases = new Map();
 const log = getLogger('discord');
+const commandDir = './src/commands';
 
-export const fetchPartial = async (object) => {
-  if (object.partial) {
-    try {
-      log.info('Fetching a partial object...');
-      await object.fetch();
-    } catch (error) {
-      log.error(error.message);
-    }
+export const loadCommands = async () =>
+  await Promise.all(
+    readdirSync(commandDir)
+      .filter((file) => file.endsWith('.js'))
+      .map(async (file) => await import(`../commands/${file}`))
+  );
+
+export const registerCommands = async () => {
+  client.commands = new Collection();
+
+  const commands = await loadCommands();
+
+  for (const command of commands) {
+    log.info(`Registered command ${command.data.name}`);
+
+    client.commands.set(command.data.name, command);
   }
 };
 
-const handleMessage = async (message) => {
+client.on('interactionCreate', async (interaction) => {
   try {
-    await fetchPartial(message);
-
-    const { author, content } = message;
-
-    if (author.bot || !content.startsWith(config.commandPrefix)) {
+    if (!interaction.isCommand()) {
       return;
     }
 
-    const args = content.split(/\s+/).map((arg) => arg.trim());
-    const [command, ...otherArgs] = args;
-    const commandWord = command.replace(config.commandPrefix, '').toLowerCase();
+    const { commandName } = interaction;
+    const command = client.commands.get(commandName);
 
-    if (!commands.has(commandWord) && !aliases.has(commandWord)) {
-      return log.warn(
-        `${author.username} tried to use an unrecognized command: ${command}!`
-      );
+    if (!command) {
+      return log.warn(`Did not find a handler for ${commandName}`);
     }
 
-    const handler =
-      commands.get(commandWord) || commands.get(aliases.get(commandWord));
-
-    return await handler(message, otherArgs);
+    await command.handler(interaction);
   } catch (error) {
     log.error(error.message);
     log.error(error.stack);
-  }
-};
 
-export const postEmbed = async (channel, embed, elements = []) => {
-  if (!channel || !embed || !Array.isArray(elements)) {
+    await interaction.reply({
+      content: 'There was an error executing this command!',
+      ephemeral: true
+    });
+  }
+});
+
+export const postEmbed = async (interaction, embed, elements = []) => {
+  if (!interaction || !embed || !Array.isArray(elements)) {
     log.warn('Invalid arguments supplied to postEmbed!');
     return;
   }
@@ -72,7 +74,7 @@ export const postEmbed = async (channel, embed, elements = []) => {
   for (const element of elements) {
     if (element.length + description.length >= 2048) {
       embed.setDescription(description);
-      await channel.send(embed);
+      await interaction.followUp({ embeds: [embed] });
       description = '';
     }
 
@@ -81,7 +83,7 @@ export const postEmbed = async (channel, embed, elements = []) => {
 
   if (description !== '') {
     embed.setDescription(description);
-    await channel.send(embed);
+    await interaction.followUp({ embeds: [embed] });
   }
 };
 
@@ -95,21 +97,6 @@ export const connectBot = () => {
 
 export const disconnectBot = () => {
   client.destroy();
-};
-
-export const registerCommands = (cmds) => {
-  for (const [command, handler] of Object.entries(cmds)) {
-    if (isFunction(handler)) {
-      commands.set(command, handler);
-    } else {
-      commands.set(command, handler.handler);
-      if (Array.isArray(handler?.aliases)) {
-        for (const alias of handler.aliases) {
-          aliases.set(alias, command);
-        }
-      }
-    }
-  }
 };
 
 export const isAdmin = (member) =>
@@ -161,13 +148,4 @@ client.on('ready', async () => {
   const guilds = [...client.guilds.cache.values()];
 
   log.info(`Bot is connected to Discord, tracking ${guilds.length} servers!`);
-
-  for (const handler of commands.values()) {
-    if (handler.events && handler.events.connected) {
-      await handler.events.connected(client);
-    }
-  }
 });
-
-// command processor
-client.on('messageCreate', handleMessage);

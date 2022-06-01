@@ -16,7 +16,7 @@ export default {
   notifySolicit: () =>
     sendEmbed(
       new MessageEmbed().setTitle('Join Uno!').setDescription(
-        `Say \`?join\` to join the game!
+        `Use \`/join\` to join the game!
 
 Starting in ${config.solicitDelay / 1e3} seconds...`
       )

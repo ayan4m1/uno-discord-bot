@@ -1,12 +1,15 @@
-import { createMachine } from 'xstate';
+import { createMachine, interpret } from 'xstate';
 
 import actions from '../actions/index.js';
 import guards from '../guards/index.js';
 import services from '../services/index.js';
 import { uno as config } from './config.js';
+import { getLogger } from './logging.js';
 import { createContext } from './deck.js';
 
-export const createGame = () =>
+const log = getLogger('game');
+
+const createGame = () =>
   createMachine(
     {
       id: 'uno',
@@ -246,3 +249,7 @@ export const createGame = () =>
       services
     }
   );
+
+export const service = interpret(createGame()).onTransition((state) => {
+  log.debug(JSON.stringify(state.context, null, 2));
+});
