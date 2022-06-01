@@ -1,16 +1,18 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 
-import { isAdmin } from '../modules/discord.js';
-import { service } from '../modules/game.js';
+import { createInteractionHandler, isAdmin } from '../modules/discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('stop')
   .setDescription('Stops an active game');
 
-export const handler = (message) => {
-  if (!isAdmin(message.member)) {
-    return message.reply('You cannot stop games.');
+export const handler = createInteractionHandler((interaction) => {
+  if (!isAdmin(interaction.member)) {
+    interaction.editReply('You cannot stop games.');
+    return {};
   }
 
-  service.send('GAME_STOP');
-};
+  return {
+    type: 'GAME_STOP'
+  };
+});

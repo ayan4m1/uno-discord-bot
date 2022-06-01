@@ -1,13 +1,12 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 
-import { service } from '../modules/game.js';
+import { createInteractionHandler } from '../modules/discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('draw')
   .setDescription('Draws a card from the discard pile');
 
-export const handler = ({ author: { id } }) =>
-  service.send({
-    type: 'CARD_DRAW',
-    id
-  });
+export const handler = createInteractionHandler(({ user: { id } }) => ({
+  type: 'CARD_DRAW',
+  id
+}));

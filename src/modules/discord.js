@@ -2,6 +2,7 @@ import { Client, Collection, Intents } from 'discord.js';
 import { readdirSync } from 'fs';
 
 import { discord as config } from './config.js';
+import { service } from './game.js';
 import { getLogger } from './logging.js';
 
 export const client = new Client({
@@ -47,6 +48,8 @@ client.on('interactionCreate', async (interaction) => {
       return log.warn(`Did not find a handler for ${commandName}`);
     }
 
+    await interaction.deferReply();
+
     await command.handler(interaction);
   } catch (error) {
     log.error(error.message);
@@ -58,34 +61,6 @@ client.on('interactionCreate', async (interaction) => {
     });
   }
 });
-
-export const postEmbed = async (interaction, embed, elements = []) => {
-  if (!interaction || !embed || !Array.isArray(elements)) {
-    log.warn('Invalid arguments supplied to postEmbed!');
-    return;
-  }
-
-  let { description } = embed;
-
-  if (!description) {
-    description = '';
-  }
-
-  for (const element of elements) {
-    if (element.length + description.length >= 2048) {
-      embed.setDescription(description);
-      await interaction.followUp({ embeds: [embed] });
-      description = '';
-    }
-
-    description += element;
-  }
-
-  if (description !== '') {
-    embed.setDescription(description);
-    await interaction.followUp({ embeds: [embed] });
-  }
-};
 
 export const connectBot = () => {
   if (!config.botToken) {
@@ -120,11 +95,20 @@ const getPrivateMessageChannel = async (userId) => {
   return member.user.dmChannel || member.user.createDM();
 };
 
+export const replyMessage = (interaction, message, ephemeral = false) =>
+  interaction.editReply({ content: message, ephemeral });
+
+export const replyEmbed = (interaction, embed, ephemeral = false) =>
+  interaction.editReply({ embeds: [embed], ephemeral });
+
 export const sendEmbed = (embed) => {
   const channel = getNotificationChannel();
 
   return channel.send({ embeds: [embed] });
 };
+
+export const createInteractionHandler = (handler) => (interaction) =>
+  service.send({ ...handler(interaction), interaction });
 
 export const sendMessage = (message) => {
   const channel = getNotificationChannel();
@@ -136,12 +120,6 @@ export const sendPrivateEmbed = async (userId, embed, files = []) => {
   const channel = await getPrivateMessageChannel(userId);
 
   return channel.send({ embeds: [embed], files });
-};
-
-export const sendPrivateMessage = async (userId, message) => {
-  const channel = await getPrivateMessageChannel(userId);
-
-  return channel.send(message);
 };
 
 client.on('ready', async () => {

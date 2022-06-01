@@ -4,8 +4,9 @@ import { send, actions } from 'xstate';
 
 import { uno as config } from '../modules/config.js';
 import {
+  replyEmbed,
+  replyMessage,
   sendEmbed,
-  sendMessage,
   sendPrivateEmbed
 } from '../modules/discord.js';
 import { createCardMontage } from '../modules/montage.js';
@@ -13,8 +14,9 @@ import { createCardMontage } from '../modules/montage.js';
 const { pure } = actions;
 
 export default {
-  notifySolicit: () =>
-    sendEmbed(
+  notifySolicit: (_, { interaction }) =>
+    replyEmbed(
+      interaction,
       new MessageEmbed().setTitle('Join Uno!').setDescription(
         `Use \`/join\` to join the game!
 
@@ -27,14 +29,19 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
         .setTitle('Game starting!')
         .setDescription(`Dealing cards to ${players.length} players...`)
     ),
-  notifyGameStop: () =>
-    sendEmbed(
+  notifyGameStop: (_, { interaction }) =>
+    replyEmbed(
+      interaction,
       new MessageEmbed()
         .setTitle('Game stopped!')
         .setDescription('The game was aborted.')
     ),
-  notifyGameStatus: ({ activePlayer, players, hands, discardPile, deck }) =>
-    sendEmbed(
+  notifyGameStatus: (
+    { activePlayer, players, hands, discardPile, deck },
+    { interaction }
+  ) =>
+    replyEmbed(
+      interaction,
       players.length
         ? new MessageEmbed()
             .setTitle(`Game with ${players.length} players`)
@@ -55,30 +62,43 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
             .setFooter(`Active Player: ${activePlayer.username}`)
         : new MessageEmbed().setDescription('Not playing a game!')
     ),
-  notifyAddPlayer: (_, event) =>
-    sendEmbed(
+  notifyAddPlayer: (_, { username, interaction }) =>
+    replyEmbed(
+      interaction,
       new MessageEmbed()
         .setTitle('New player!')
-        .setDescription(`${event.username} has joined the game!`)
+        .setDescription(`${username} has joined the game!`)
     ),
-  notifyRemovePlayer: (_, event) =>
-    sendEmbed(
+  notifyRemovePlayer: (_, { username, interaction }) =>
+    replyEmbed(
+      interaction,
       new MessageEmbed()
         .setTitle('Lost player!')
-        .setDescription(`${event.username} has left the game!`)
+        .setDescription(`${username} has left the game!`)
     ),
-  notifyInvalidPlayer: () => sendMessage("It's not your turn!"),
-  notifyInvalidPass: () =>
-    sendMessage("You can't pass without first drawing a card using `?draw`."),
-  notifyMissingCard: () => sendMessage("You can't play a card you don't have!"),
+  notifyInvalidPlayer: (_, { interaction }) =>
+    replyMessage(interaction, "It's not your turn!", true),
+  notifyInvalidPass: (_, { interaction }) =>
+    replyMessage(
+      interaction,
+      "You can't pass without first drawing a card using `/draw`.",
+      true
+    ),
+  notifyMissingCard: (_, { interaction }) =>
+    replyMessage(interaction, "You can't play a card you don't have!", true),
   notifyInvalidCard: ({ discardPile }, { card }) =>
-    sendMessage(
-      `You cannot play ${card.toString()} on ${last(discardPile).toString()}!`
+    replyMessage(
+      `You cannot play ${card.toString()} on ${last(discardPile).toString()}!`,
+      true
     ),
-  notifyInvalidColor: (_, { color }) =>
-    sendMessage(`${color} is not a valid color (R, G, B, or Y)`),
-  notifyDraw: ({ activePlayer }) =>
-    sendMessage(`${activePlayer.username} drew a card!`),
+  notifyInvalidColor: (_, { color, interaction }) =>
+    replyMessage(
+      interaction,
+      `${color} is not a valid color (R, G, B, or Y)`,
+      true
+    ),
+  notifyDraw: ({ activePlayer }, { interaction }) =>
+    replyMessage(interaction, `${activePlayer.username} drew a card!`),
   notifyAllHands: pure(({ players }) =>
     players.map((player) => send({ type: 'HAND_REQUEST', id: player.id }))
   ),

@@ -2,7 +2,7 @@ import { MessageEmbed } from 'discord.js';
 import { last } from 'lodash-es';
 
 import { uno as config } from '../modules/config.js';
-import { sendEmbed, sendMessage } from '../modules/discord.js';
+import { replyMessage, sendEmbed, sendMessage } from '../modules/discord.js';
 import { CardType, hexColors, getCardColor } from '../modules/deck.js';
 
 export default {
@@ -50,10 +50,14 @@ export default {
   },
   notifyNoPlayers: () =>
     sendMessage('Cancelled the game because no players joined!'),
-  notifyColorChange: ({ color, activePlayer }) =>
-    sendMessage(`${activePlayer.username} chose ${getCardColor(color)}!`),
-  notifyColorChangeNeeded: ({ activePlayer }) =>
-    sendMessage(
+  notifyColorChange: ({ color, activePlayer }, { interaction }) =>
+    replyMessage(
+      interaction,
+      `${activePlayer.username} chose ${getCardColor(color)}!`
+    ),
+  notifyColorChangeNeeded: ({ activePlayer }, { interaction }) =>
+    replyMessage(
+      interaction,
       `${activePlayer.username} must select a new color! Use e.g. \`?color Red\``
     ),
   notifyUno: ({ activePlayer }) =>
@@ -70,8 +74,8 @@ export default {
 
     return sendMessage(`${winner.username} is the winner!`);
   },
-  notifyPass: ({ activePlayer }) =>
-    sendMessage(`${activePlayer.username} passed!`),
+  notifyPass: ({ activePlayer }, { interaction }) =>
+    replyMessage(interaction, `${activePlayer.username} passed!`),
   notifySkipPlayer: ({ activePlayer }) =>
     sendMessage(`Skipping ${activePlayer.username}`)
 };

@@ -1,15 +1,23 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 
 import { Card } from '../modules/deck.js';
-import { service } from '../modules/game.js';
+import { createInteractionHandler } from '../modules/discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('play')
-  .setDescription('Plays a card from your hand');
+  .setDescription('Plays a card from your hand')
+  .addStringOption((option) =>
+    option.setName('card').setDescription('Card to play').setRequired(true)
+  );
 
-export const handler = ({ author: { id } }, [card]) =>
-  service.send({
+export const handler = createInteractionHandler((interaction) => {
+  const {
+    user: { id }
+  } = interaction;
+
+  return {
     type: 'CARD_PLAY',
     id,
-    card: Card.fromString(card)
-  });
+    card: Card.fromString(interaction.options.getString('card', true))
+  };
+});
