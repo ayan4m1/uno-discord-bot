@@ -8,8 +8,8 @@ export const data = new SlashCommandBuilder()
 
 export const handler = createInteractionHandler((interaction) => {
   if (!isAdmin(interaction.member)) {
-    interaction.editReply('You cannot stop games.');
-    return {};
+    interaction.reply('You cannot stop games.');
+    return null;
   }
 
   return {
