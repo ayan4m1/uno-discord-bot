@@ -2,11 +2,15 @@ import { send, assign } from 'xstate';
 import { sampleSize, without, sample, reverse, last } from 'lodash-es';
 
 import { CardColor, CardType, createContext } from '../modules/deck.js';
+import { shuffle } from 'lodash-es';
 
 export default {
   resetGameState: assign(createContext()),
   resetLastDrawPlayer: assign({
-    lastDrawPlayer: null
+    lastDrawPlayer: () => null
+  }),
+  shufflePlayers: assign({
+    players: ({ players }) => shuffle(players)
   }),
   activateNextPlayer: assign({
     activePlayer: ({ players, activePlayer }) => {

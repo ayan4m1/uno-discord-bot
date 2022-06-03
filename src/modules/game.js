@@ -56,7 +56,7 @@ const createGame = () =>
           }
         },
         startGame: {
-          entry: ['dealHands'],
+          entry: ['shufflePlayers', 'dealHands'],
           always: [{ target: 'startRound' }]
         },
         startRound: {
