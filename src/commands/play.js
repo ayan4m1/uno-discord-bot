@@ -12,12 +12,13 @@ export const data = new SlashCommandBuilder()
 
 export const handler = createInteractionHandler((interaction) => {
   const {
-    user: { id }
+    user: { id },
+    options
   } = interaction;
 
   return {
     type: 'CARD_PLAY',
     id,
-    card: Card.fromString(interaction.options.getString('card', true))
+    card: Card.fromString(options.getString('card', true))
   };
 });

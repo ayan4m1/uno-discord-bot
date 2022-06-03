@@ -20,12 +20,13 @@ export const data = new SlashCommandBuilder()
 
 export const handler = createInteractionHandler((interaction) => {
   const {
-    user: { id }
+    user: { id },
+    options
   } = interaction;
 
   return {
     type: 'COLOR_CHANGE',
     id,
-    color: getCardColor(interaction.options.getString('color', true))
+    color: getCardColor(options.getString('color', true))
   };
 });
