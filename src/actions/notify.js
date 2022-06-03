@@ -1,4 +1,4 @@
-import { MessageEmbed, MessageAttachment } from 'discord.js';
+import { MessageEmbed } from 'discord.js';
 import { last } from 'lodash-es';
 import { send, actions } from 'xstate';
 
@@ -9,7 +9,6 @@ import {
   sendEmbed,
   sendPrivateEmbed
 } from '../modules/discord.js';
-import { createCardMontage } from '../modules/montage.js';
 
 const { pure } = actions;
 
@@ -77,26 +76,20 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
         .setDescription(`${username} has left the game!`)
     ),
   notifyInvalidPlayer: (_, { interaction }) =>
-    replyMessage(interaction, "It's not your turn!", true),
+    replyMessage(interaction, "It's not your turn!"),
   notifyInvalidPass: (_, { interaction }) =>
     replyMessage(
       interaction,
-      "You can't pass without first drawing a card using `/draw`.",
-      true
+      "You can't pass without first drawing a card using `/draw`."
     ),
   notifyMissingCard: (_, { interaction }) =>
-    replyMessage(interaction, "You can't play a card you don't have!", true),
+    replyMessage(interaction, "You can't play a card you don't have!"),
   notifyInvalidCard: ({ discardPile }, { card }) =>
     replyMessage(
-      `You cannot play ${card.toString()} on ${last(discardPile).toString()}!`,
-      true
+      `You cannot play ${card.toString()} on ${last(discardPile).toString()}!`
     ),
   notifyInvalidColor: (_, { color, interaction }) =>
-    replyMessage(
-      interaction,
-      `${color} is not a valid color (R, G, B, or Y)`,
-      true
-    ),
+    replyMessage(interaction, `${color} is not a valid color (R, G, B, or Y)`),
   notifyDraw: ({ activePlayer }, { interaction }) =>
     replyMessage(interaction, `${activePlayer.username} drew a card!`),
   notifyAllHands: pure(({ players }) =>
@@ -106,16 +99,16 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
     type: 'HAND_REQUEST',
     id: activePlayer.id
   })),
-  notifyHand: async ({ hands }, { id }) => {
+  notifyHand: async ({ hands }, { interaction, id }) => {
     const hand = hands[id];
-    const montage = await createCardMontage(hand);
     const embed = new MessageEmbed()
       .setTitle('Your Hand')
-      .setDescription(hand.map((card) => card.toString()).join(', '))
-      .setImage('attachment://hand.png');
+      .setDescription(hand.map((card) => card.toString()).join(', '));
 
-    return sendPrivateEmbed(id, embed, [
-      new MessageAttachment(montage, 'hand.png')
-    ]);
+    if (interaction) {
+      return replyEmbed(interaction, embed);
+    } else {
+      return sendPrivateEmbed(id, embed);
+    }
   }
 };

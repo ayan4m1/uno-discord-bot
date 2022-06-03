@@ -62,7 +62,7 @@ const createGame = () =>
         startRound: {
           entry: ['activateNextPlayer', 'resetLastDrawPlayer'],
           always: [
-            { target: 'announceWinner', cond: 'isGameOver' },
+            { target: 'notifyWinner', cond: 'isGameOver' },
             { target: 'notifyRound' }
           ]
         },
@@ -136,30 +136,26 @@ const createGame = () =>
               entry: ['playCard'],
               invoke: {
                 src: 'notifyPlay',
-                onDone: 'checkUno'
+                onDone: 'checkWinner'
               }
+            },
+            checkWinner: {
+              always: [
+                { target: 'notifyWinner', cond: 'isGameOver' },
+                { target: 'checkUno' }
+              ]
             },
             checkUno: {
               always: [
-                { target: 'uno', cond: 'playerHasUno' },
-                { target: 'checkSpecial' }
-              ]
-            },
-            uno: {
-              invoke: {
-                src: 'notifyUno',
-                onDone: 'checkSpecial'
-              }
-            },
-            checkSpecial: {
-              always: [
-                { target: 'specialCard', cond: 'isSpecialCardPlayed' },
+                { target: 'notifyUno', cond: 'playerHasUno' },
                 { target: 'checkColor' }
               ]
             },
-            specialCard: {
-              entry: 'handleSpecialCard',
-              always: [{ target: 'checkColor' }]
+            notifyUno: {
+              invoke: {
+                src: 'notifyUno',
+                onDone: 'checkColor'
+              }
             },
             checkColor: {
               always: [
@@ -167,7 +163,7 @@ const createGame = () =>
                   target: 'changeColorNeeded',
                   cond: 'isColorChangeNeeded'
                 },
-                { target: 'done' }
+                { target: 'checkSpecial' }
               ]
             },
             changeColorNeeded: {
@@ -200,6 +196,22 @@ const createGame = () =>
                 ]
               }
             },
+            checkSpecial: {
+              always: [
+                { target: 'specialCard', cond: 'isSpecialCardPlayed' },
+                { target: 'done' }
+              ]
+            },
+            specialCard: {
+              entry: 'handleSpecialCard',
+              always: [{ target: 'done' }]
+            },
+            notifyWinner: {
+              invoke: {
+                src: 'notifyWinner',
+                onDone: 'idle'
+              }
+            },
             notifyChangeColor: {
               invoke: {
                 src: 'notifyColorChange',
@@ -214,7 +226,7 @@ const createGame = () =>
             },
             notifySkip: {
               invoke: {
-                src: 'notifySkipPlayer',
+                src: 'notifySkip',
                 onDone: 'done'
               }
             },
@@ -222,7 +234,7 @@ const createGame = () =>
           },
           onDone: 'startRound'
         },
-        announceWinner: {
+        notifyWinner: {
           invoke: {
             src: 'notifyWinner',
             onDone: 'idle'

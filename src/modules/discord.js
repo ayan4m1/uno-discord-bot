@@ -45,10 +45,11 @@ client.on('interactionCreate', async (interaction) => {
     const command = client.commands.get(commandName);
 
     if (!command) {
-      return log.warn(`Did not find a handler for ${commandName}`);
-    }
+      const message = `Did not find a handler for ${commandName}`;
 
-    await interaction.deferReply();
+      log.warn(message);
+      throw new Error(message);
+    }
 
     await command.handler(interaction);
   } catch (error) {
@@ -95,11 +96,11 @@ const getPrivateMessageChannel = async (userId) => {
   return member.user.dmChannel || member.user.createDM();
 };
 
-export const replyMessage = (interaction, message, ephemeral = false) =>
-  interaction.editReply({ content: message, ephemeral });
+export const replyMessage = (interaction, message) =>
+  interaction.followUp({ content: message });
 
-export const replyEmbed = (interaction, embed, ephemeral = false) =>
-  interaction.editReply({ embeds: [embed], ephemeral });
+export const replyEmbed = (interaction, embed, files = []) =>
+  interaction.followUp({ embeds: [embed], files });
 
 export const sendEmbed = (embed) => {
   const channel = getNotificationChannel();
@@ -107,8 +108,16 @@ export const sendEmbed = (embed) => {
   return channel.send({ embeds: [embed] });
 };
 
-export const createInteractionHandler = (handler) => (interaction) =>
-  service.send({ ...handler(interaction), interaction });
+export const createInteractionHandler = (handler) => async (interaction) => {
+  const event = handler(interaction);
+
+  if (!event) {
+    return;
+  }
+
+  await interaction.deferReply({ ephemeral: event.ephemeral });
+  service.send({ ...event, interaction });
+};
 
 export const sendMessage = (message) => {
   const channel = getNotificationChannel();

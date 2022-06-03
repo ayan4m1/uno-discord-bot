@@ -8,5 +8,6 @@ export const data = new SlashCommandBuilder()
 
 export const handler = createInteractionHandler(({ user: { id } }) => ({
   type: 'HAND_REQUEST',
-  id
+  id,
+  ephemeral: true
 }));
