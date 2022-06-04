@@ -1,4 +1,4 @@
-import { createMachine, interpret } from 'xstate';
+import { createMachine, interpret, send } from 'xstate';
 
 import actions from '../actions/index.js';
 import guards from '../guards/index.js';
@@ -73,6 +73,9 @@ const createGame = () =>
         round: {
           entry: ['notifyActivePlayerHand'],
           on: {
+            GAME_END: {
+              target: 'idle'
+            },
             CARD_PLAY: [
               {
                 actions: 'notifyInvalidPlayer',
@@ -110,6 +113,12 @@ const createGame = () =>
                 [config.roundDelay]: {
                   target: 'notifySkip'
                 }
+              }
+            },
+            notifySkip: {
+              invoke: {
+                src: 'notifySkip',
+                onDone: 'done'
               }
             },
             drawCard: {
@@ -195,6 +204,12 @@ const createGame = () =>
                 ]
               }
             },
+            notifyChangeColor: {
+              invoke: {
+                src: 'notifyColorChange',
+                onDone: 'done'
+              }
+            },
             checkSpecial: {
               always: [
                 { target: 'specialCard', cond: 'isSpecialCardPlayed' },
@@ -208,13 +223,9 @@ const createGame = () =>
             notifyWinner: {
               invoke: {
                 src: 'notifyWinner',
-                onDone: 'idle'
-              }
-            },
-            notifyChangeColor: {
-              invoke: {
-                src: 'notifyColorChange',
-                onDone: 'done'
+                onDone: {
+                  actions: send('GAME_END')
+                }
               }
             },
             notifyPass: {
@@ -223,21 +234,9 @@ const createGame = () =>
                 onDone: 'done'
               }
             },
-            notifySkip: {
-              invoke: {
-                src: 'notifySkip',
-                onDone: 'done'
-              }
-            },
             done: { type: 'final' }
           },
           onDone: 'startRound'
-        },
-        notifyWinner: {
-          invoke: {
-            src: 'notifyWinner',
-            onDone: 'idle'
-          }
         },
         notifyNoPlayers: {
           invoke: {
