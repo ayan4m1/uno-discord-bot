@@ -105,7 +105,7 @@ export default {
   }),
   changeColorRandom: send(() => ({
     type: 'COLOR_CHANGE',
-    color: sample(Object.values(CardColor).filter((val) => Boolean(val)))
+    color: sample(Object.values(CardColor))
   })),
   handleSpecialCard: assign(
     ({ activePlayer, players, deck, hands, discardPile }) => {
