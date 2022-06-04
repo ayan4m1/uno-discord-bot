@@ -164,5 +164,15 @@ export default {
           return {};
       }
     }
-  )
+  ),
+  checkEmptyDeck: assign(({ deck, discardPile }) => {
+    if (deck.length > 0) {
+      return {};
+    }
+
+    return {
+      deck: shuffle(discardPile),
+      discardPile: []
+    };
+  })
 };

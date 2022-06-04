@@ -60,7 +60,11 @@ const createGame = () =>
           always: [{ target: 'startRound' }]
         },
         startRound: {
-          entry: ['activateNextPlayer', 'resetLastDrawPlayer'],
+          entry: [
+            'activateNextPlayer',
+            'resetLastDrawPlayer',
+            'checkEmptyDeck'
+          ],
           invoke: {
             src: 'notifyRoundStart',
             onDone: 'round'
