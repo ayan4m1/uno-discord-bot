@@ -22,6 +22,10 @@ const createGame = () =>
         },
         GAME_STATUS: {
           actions: 'notifyGameStatus'
+        },
+        HAND_REQUEST: {
+          actions: 'notifyHand',
+          cond: 'isGameActive'
         }
       },
       states: {

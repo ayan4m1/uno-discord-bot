@@ -6,6 +6,7 @@ import { CardType, getCardColor } from '../modules/deck.js';
 export default {
   // debugMode allows game to start with 1 player
   canGameStart: ({ players }) => players.length > (config.debugMode ? 0 : 1),
+  isGameActive: ({ hands }) => Object.values(hands).length > 0,
   isGameOver: ({ hands }) =>
     Object.values(hands).some((hand) => hand.length === 0),
   isPlayerInvalid: negate(({ activePlayer }, { id }) => activePlayer.id === id),
