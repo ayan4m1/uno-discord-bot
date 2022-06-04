@@ -22,17 +22,17 @@ export default {
     }
   }),
   addPlayer: assign({
-    players: ({ players }, event) => [
+    players: ({ players }, { id, username }) => [
       ...players,
       {
-        id: event.id,
-        username: event.username
+        id,
+        username
       }
     ]
   }),
   removePlayer: assign({
-    players: ({ players }, event) =>
-      players.filter((player) => player.id !== event.id)
+    players: ({ players }, { id }) =>
+      players.filter((player) => player.id !== id)
   }),
   dealHands: assign(({ deck, players }) => {
     const hands = {};
