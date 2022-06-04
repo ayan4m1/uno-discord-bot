@@ -4,7 +4,7 @@ import { createInteractionHandler } from '../modules/discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('leave')
-  .setDescription('Leaves an active or pending game');
+  .setDescription('Leaves a pending game');
 
 export const handler = createInteractionHandler(
   ({ user: { id, username } }) => ({
