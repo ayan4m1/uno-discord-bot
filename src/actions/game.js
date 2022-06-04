@@ -48,14 +48,14 @@ export default {
 
     const discardPile = sampleSize(remainingDeck, 1);
 
-    remainingDeck = without(remainingDeck, discardPile[0]);
+    remainingDeck = without(remainingDeck, ...discardPile);
 
     let color;
 
     switch (discardPile[0].type) {
       case CardType.WILD:
       case CardType.WILD_DRAW:
-        color = sampleSize(Object.values(CardColor));
+        color = sample(Object.values(CardColor));
         break;
       default:
         color = null;
