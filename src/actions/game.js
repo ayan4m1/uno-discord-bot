@@ -16,11 +16,9 @@ export default {
     activePlayer: ({ players, activePlayer }) => {
       const currentIndex = players.indexOf(activePlayer);
 
-      if (currentIndex === players.length - 1) {
-        return players[0];
-      } else {
-        return players[currentIndex + 1];
-      }
+      return players[
+        currentIndex === players.length - 1 ? 0 : currentIndex + 1
+      ];
     }
   }),
   addPlayer: assign({
