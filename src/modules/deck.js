@@ -170,9 +170,9 @@ export class Card {
    */
   equals(other) {
     return (
-      this.type === other.type &&
-      this.color === other.color &&
-      this.value === other.value
+      this.type === other?.type &&
+      this.color === other?.color &&
+      this.value === other?.value
     );
   }
 

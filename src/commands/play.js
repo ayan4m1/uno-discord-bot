@@ -16,9 +16,16 @@ export const handler = createInteractionHandler((interaction) => {
     options
   } = interaction;
 
+  const card = Card.fromString(options.getString('card', true));
+
+  if (!card) {
+    interaction.reply('Invalid card!');
+    return null;
+  }
+
   return {
     type: 'CARD_PLAY',
     id,
-    card: Card.fromString(options.getString('card', true))
+    card
   };
 });
