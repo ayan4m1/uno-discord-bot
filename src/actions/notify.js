@@ -85,7 +85,7 @@ export default {
   notifyInvalidPass: (_, { interaction }) =>
     replyMessage(
       interaction,
-      "You can't pass without first drawing a card using `/draw`."
+      'You shall not pass (without first drawing a card)!'
     ),
   notifyInvalidDraw: (_, { interaction }) =>
     replyMessage(
