@@ -109,6 +109,12 @@ const createGame = () =>
                 target: '.drawCard'
               }
             ],
+            PLAYER_ADD: {
+              actions: 'notifyInvalidAdd'
+            },
+            PLAYER_REMOVE: {
+              actions: 'notifyInvalidRemove'
+            },
             PLAYER_PASS: {
               actions: 'notifyInvalidPass'
             },

@@ -80,6 +80,10 @@ export default {
         description: `${username} has left the game!`
       })
     ),
+  notifyInvalidAdd: (_, { interaction }) =>
+    replyMessage(interaction, 'Sorry, you cannot join a game in progress!'),
+  notifyInvalidRemove: (_, { interaction }) =>
+    replyMessage(interaction, 'Sorry, you cannot leave a game in progress!'),
   notifyInvalidPlayer: (_, { interaction }) =>
     replyMessage(interaction, "It's not your turn!"),
   notifyInvalidPass: (_, { interaction }) =>
