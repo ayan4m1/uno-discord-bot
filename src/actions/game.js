@@ -52,7 +52,20 @@ export default {
 
     remainingDeck = without(remainingDeck, discardPile[0]);
 
+    let color;
+
+    switch (discardPile[0].type) {
+      case CardType.WILD:
+      case CardType.WILD_DRAW:
+        color = sampleSize(Object.values(CardColor));
+        break;
+      default:
+        color = null;
+        break;
+    }
+
     return {
+      color,
       deck: remainingDeck,
       hands,
       discardPile
