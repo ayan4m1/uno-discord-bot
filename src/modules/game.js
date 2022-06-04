@@ -157,6 +157,14 @@ const createGame = () =>
                 { target: 'checkUno' }
               ]
             },
+            notifyWinner: {
+              invoke: {
+                src: 'notifyWinner',
+                onDone: {
+                  actions: send('GAME_END')
+                }
+              }
+            },
             checkUno: {
               always: [
                 { target: 'notifyUno', cond: 'playerHasUno' },
@@ -187,7 +195,7 @@ const createGame = () =>
             changeColor: {
               after: {
                 [config.roundDelay]: {
-                  target: 'notifySkip',
+                  target: 'checkSpecial',
                   actions: ['changeColorRandom']
                 }
               },
@@ -211,7 +219,7 @@ const createGame = () =>
             notifyChangeColor: {
               invoke: {
                 src: 'notifyColorChange',
-                onDone: 'done'
+                onDone: 'checkSpecial'
               }
             },
             checkSpecial: {
@@ -223,14 +231,6 @@ const createGame = () =>
             specialCard: {
               entry: 'handleSpecialCard',
               always: [{ target: 'done' }]
-            },
-            notifyWinner: {
-              invoke: {
-                src: 'notifyWinner',
-                onDone: {
-                  actions: send('GAME_END')
-                }
-              }
             },
             notifyPass: {
               invoke: {
