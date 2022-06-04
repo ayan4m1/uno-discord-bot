@@ -22,22 +22,19 @@ export default {
       hexColor = hexColors[discard.color];
     }
 
-    let embed = new MessageEmbed()
-      .setColor(hexColor)
-      .setTitle(`${activePlayer.username}'s turn!`)
-      .setDescription(
-        `You have ${config.roundDelay / 1e3} seconds to \`/play\` or \`/draw\`.`
-      )
-      .setImage(discard.toUrl('M'));
+    let embed = new MessageEmbed({
+      title: `${activePlayer.username}'s turn!`,
+      description: `You have ${
+        config.roundDelay / 1e3
+      } seconds to \`/play\` or \`/draw\`.`,
+      color: hexColor,
+      image: discard.toUrl('M')
+    });
 
     switch (discard.type) {
       case CardType.WILD_DRAW:
       case CardType.WILD:
-        if (color) {
-          embed = embed.setDescription(`Color is ${color.toLowerCase()}`);
-        } else {
-          // change color to sample(Object.values(CardColor));
-        }
+        embed = embed.setDescription(`Color is ${color?.toLowerCase?.()}`);
         break;
       default:
         break;
@@ -56,9 +53,10 @@ export default {
 
     return replyEmbed(
       interaction,
-      new MessageEmbed()
-        .setTitle(`${activePlayer.username} played ${card.toString()}!`)
-        .setColor(hexColor)
+      new MessageEmbed({
+        title: `${activePlayer.username} played ${card.toString()}!`,
+        color: hexColor
+      })
     );
   },
   notifyNoPlayers: () =>
@@ -74,9 +72,10 @@ export default {
     ),
   notifyUno: ({ activePlayer }) =>
     sendEmbed(
-      new MessageEmbed()
-        .setTitle(`${activePlayer.username} has UNO!`)
-        .setDescription(`Watch out for ${activePlayer.username}!`)
+      new MessageEmbed({
+        title: `${activePlayer.username} has UNO!`,
+        description: `Watch out for ${activePlayer.username}!`
+      })
     ),
   notifyWinner: ({ players, hands }) => {
     const [winnerId] = Object.entries(hands).find(

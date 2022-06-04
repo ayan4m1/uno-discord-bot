@@ -16,24 +16,27 @@ export default {
   notifySolicit: (_, { interaction }) =>
     replyEmbed(
       interaction,
-      new MessageEmbed().setTitle('Join Uno!').setDescription(
-        `Use \`/join\` to join the game!
+      new MessageEmbed({
+        title: 'Join Uno!',
+        description: `Use \`/join\` to join the game!
 
-Starting in ${config.solicitDelay / 1e3} seconds...`
-      )
+        Starting in ${config.solicitDelay / 1e3} seconds...`
+      })
     ),
   notifyGameStart: ({ players }) =>
     sendEmbed(
-      new MessageEmbed()
-        .setTitle('Game starting!')
-        .setDescription(`Dealing cards to ${players.length} players...`)
+      new MessageEmbed({
+        title: 'Game starting!',
+        description: `Dealing cards to ${players.length} players...`
+      })
     ),
   notifyGameStop: (_, { interaction }) =>
     replyEmbed(
       interaction,
-      new MessageEmbed()
-        .setTitle('Game stopped!')
-        .setDescription('The game was aborted.')
+      new MessageEmbed({
+        title: 'Game stopped!',
+        description: 'The game was aborted.'
+      })
     ),
   notifyGameStatus: (
     { activePlayer, players, hands, discardPile, deck },
@@ -42,38 +45,33 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
     replyEmbed(
       interaction,
       players.length
-        ? new MessageEmbed()
-            .setTitle(`Game with ${players.length} players`)
-            .setDescription(
-              `Discard Pile: ${discardPile.length} cards
-      Deck: ${deck.length} cards
-      Hands:
-
-      ${Object.entries(hands)
-        .map(
-          ([id, hand]) =>
-            `${players.find((player) => player.id === id).username} - ${
-              hand.length
-            } cards`
-        )
-        .join('\n')}`
-            )
-            .setFooter(`Active Player: ${activePlayer.username}`)
-        : new MessageEmbed().setDescription('Not playing a game!')
+        ? new MessageEmbed({
+            title: `Game with ${players.length} players`,
+            description: `Discard Pile: ${discardPile.length} cards
+          Deck: ${deck.length} cards`,
+            fields: Object.entries(hands).map(([id, hand]) => ({
+              name: players.find((player) => player.id === id).username,
+              value: `${hand.length} cards`
+            })),
+            footer: `Active Player: ${activePlayer.username}`
+          })
+        : new MessageEmbed({ description: 'Not playing a game!' })
     ),
   notifyAddPlayer: (_, { username, interaction }) =>
     replyEmbed(
       interaction,
-      new MessageEmbed()
-        .setTitle('New player!')
-        .setDescription(`${username} has joined the game!`)
+      new MessageEmbed({
+        title: 'Player joined!',
+        description: `${username} has joined the game!`
+      })
     ),
   notifyRemovePlayer: (_, { username, interaction }) =>
     replyEmbed(
       interaction,
-      new MessageEmbed()
-        .setTitle('Lost player!')
-        .setDescription(`${username} has left the game!`)
+      new MessageEmbed({
+        title: 'Player left!',
+        description: `${username} has left the game!`
+      })
     ),
   notifyInvalidPlayer: (_, { interaction }) =>
     replyMessage(interaction, "It's not your turn!"),
@@ -82,10 +80,16 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
       interaction,
       "You can't pass without first drawing a card using `/draw`."
     ),
+  notifyInvalidDraw: (_, { interaction }) =>
+    replyMessage(
+      interaction,
+      'You have already drawn a card! Use `/play` or `/pass`!'
+    ),
   notifyMissingCard: (_, { interaction }) =>
     replyMessage(interaction, "You can't play a card you don't have!"),
-  notifyInvalidCard: ({ discardPile }, { card }) =>
+  notifyInvalidCard: ({ discardPile }, { card, interaction }) =>
     replyMessage(
+      interaction,
       `You cannot play ${card.toString()} on ${last(discardPile).toString()}!`
     ),
   notifyInvalidColor: (_, { color, interaction }) =>
@@ -101,9 +105,10 @@ Starting in ${config.solicitDelay / 1e3} seconds...`
   })),
   notifyHand: async ({ hands }, { interaction, id }) => {
     const hand = hands[id];
-    const embed = new MessageEmbed()
-      .setTitle('Your Hand')
-      .setDescription(hand.map((card) => card.toString()).join(', '));
+    const embed = new MessageEmbed({
+      title: 'Your Hand',
+      description: hand.map((card) => card.toString()).join(', ')
+    });
 
     if (interaction) {
       return replyEmbed(interaction, embed);

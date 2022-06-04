@@ -42,7 +42,7 @@ const createGame = () =>
                 cond: 'canGameStart'
               },
               {
-                target: 'noPlayers'
+                target: 'notifyNoPlayers'
               }
             ]
           },
@@ -56,17 +56,11 @@ const createGame = () =>
           }
         },
         startGame: {
-          entry: ['shufflePlayers', 'dealHands'],
+          entry: ['shufflePlayers', 'dealHands', 'notifyAllHands'],
           always: [{ target: 'startRound' }]
         },
         startRound: {
           entry: ['activateNextPlayer', 'resetLastDrawPlayer'],
-          always: [
-            { target: 'notifyWinner', cond: 'isGameOver' },
-            { target: 'notifyRound' }
-          ]
-        },
-        notifyRound: {
           invoke: {
             src: 'notifyRoundStart',
             onDone: 'round'
@@ -129,7 +123,8 @@ const createGame = () =>
                   {
                     target: 'notifyPass'
                   }
-                ]
+                ],
+                CARD_DRAW: [{ actions: 'notifyInvalidDraw' }]
               }
             },
             playCard: {
@@ -240,7 +235,7 @@ const createGame = () =>
             onDone: 'idle'
           }
         },
-        noPlayers: {
+        notifyNoPlayers: {
           invoke: {
             src: 'notifyNoPlayers',
             onDone: 'idle'
