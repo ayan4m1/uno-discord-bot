@@ -48,7 +48,7 @@ export default {
       remainingDeck = without(remainingDeck, ...hand);
     }
 
-    const discardPile = sampleSize(remainingDeck);
+    const discardPile = sampleSize(remainingDeck, 1);
 
     remainingDeck = without(remainingDeck, discardPile[0]);
 
