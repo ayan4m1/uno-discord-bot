@@ -1,5 +1,6 @@
 import { MessageEmbed } from 'discord.js';
 import { last } from 'lodash-es';
+import pluralize from 'pluralize';
 import { send, actions } from 'xstate';
 
 import { uno as config } from '../modules/config.js';
@@ -47,11 +48,17 @@ export default {
       players.length
         ? new MessageEmbed({
             title: `Game with ${players.length} players`,
-            description: `Discard Pile: ${discardPile.length} cards
-          Deck: ${deck.length} cards`,
+            image: {
+              url: discardPile[0].toUrl('M')
+            },
+            description: `Discard Pile: ${discardPile.length} ${pluralize(
+              'cards',
+              discardPile.length
+            )}
+            Deck: ${deck.length} ${pluralize('cards', deck.length)}`,
             fields: Object.entries(hands).map(([id, hand]) => ({
               name: players.find((player) => player.id === id).username,
-              value: `${hand.length} cards`
+              value: `${hand.length} ${pluralize('cards', hand.length)}`
             })),
             footer: `Active Player: ${activePlayer.username}`
           })
