@@ -23,6 +23,9 @@ const createGame = () =>
         GAME_STATUS: {
           actions: 'notifyGameStatus'
         },
+        PLAYER_PASS: {
+          actions: 'notifyInvalidPass'
+        },
         HAND_REQUEST: {
           actions: 'notifyHand',
           cond: 'isGameActive'
@@ -106,6 +109,9 @@ const createGame = () =>
                 target: '.drawCard'
               }
             ],
+            PLAYER_PASS: {
+              actions: 'notifyInvalidPass'
+            },
             HAND_REQUEST: {
               actions: 'notifyHand'
             }
