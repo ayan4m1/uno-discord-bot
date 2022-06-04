@@ -1,5 +1,6 @@
 import { MessageEmbed } from 'discord.js';
 import { last } from 'lodash-es';
+import pluralize from 'pluralize';
 
 import { uno as config } from '../modules/config.js';
 import {
@@ -11,7 +12,7 @@ import {
 import { CardType, hexColors, getCardColor } from '../modules/deck.js';
 
 export default {
-  notifyRoundStart: ({ color, discardPile, activePlayer }) => {
+  notifyRoundStart: ({ hands, players, color, discardPile, activePlayer }) => {
     const discard = last(discardPile);
 
     let hexColor;
@@ -27,8 +28,14 @@ export default {
       description: `You have ${
         config.roundDelay / 1e3
       } seconds to \`/play\` or \`/draw\`.`,
+      fields: Object.entries(hands).map(([id, hand]) => ({
+        name: players.find((player) => player.id === id).username,
+        value: `${hand.length} ${pluralize('cards', hand.length)}`
+      })),
       color: hexColor,
-      image: discard.toUrl('M')
+      image: {
+        url: discard.toUrl('M')
+      }
     });
 
     switch (discard.type) {
