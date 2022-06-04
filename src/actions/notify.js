@@ -35,7 +35,7 @@ export default {
       interaction,
       new MessageEmbed({
         title: 'Game stopped!',
-        description: 'The game was aborted.'
+        description: 'The game was stopped.'
       })
     ),
   notifyGameStatus: (
