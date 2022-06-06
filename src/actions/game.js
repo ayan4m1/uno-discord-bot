@@ -1,8 +1,7 @@
 import { send, assign } from 'xstate';
-import { sampleSize, without, sample, reverse, last } from 'lodash-es';
+import { sample, reverse, last, shuffle } from 'lodash-es';
 
 import { CardColor, CardType, createContext } from '../modules/deck.js';
-import { shuffle } from 'lodash-es';
 
 export default {
   resetGameState: assign(createContext()),
@@ -37,18 +36,15 @@ export default {
   dealHands: assign(({ deck, players }) => {
     const hands = {};
 
-    let remainingDeck = [...deck];
+    const remainingDeck = [...shuffle(deck)];
 
     for (const player of players) {
-      const hand = sampleSize(deck, 7);
+      const hand = remainingDeck.splice(0, 7);
 
       hands[player.id] = hand;
-      remainingDeck = without(remainingDeck, ...hand);
     }
 
-    const discardPile = sampleSize(remainingDeck, 1);
-
-    remainingDeck = without(remainingDeck, ...discardPile);
+    const discardPile = remainingDeck.splice(0, 1);
 
     let color;
 
@@ -86,7 +82,7 @@ export default {
     };
   }),
   drawCard: assign(({ activePlayer, hands, deck }) => {
-    const newCard = sample(deck);
+    const [newCard] = deck.splice(0, 1);
     const hand = [...hands[activePlayer.id], newCard];
 
     return {
@@ -94,7 +90,7 @@ export default {
         ...hands,
         [activePlayer.id]: hand
       },
-      deck: without(deck, newCard),
+      deck,
       lastDrawPlayer: activePlayer
     };
   }),
@@ -117,7 +113,7 @@ export default {
 
       switch (discard.type) {
         case CardType.WILD_DRAW: {
-          const newCards = sampleSize(deck, 4);
+          const newCards = deck.splice(0, 4);
 
           return {
             hands: {
@@ -125,11 +121,11 @@ export default {
               [nextPlayer.id]: [...nextPlayerHand, ...newCards]
             },
             activePlayer: nextPlayer,
-            deck: without(deck, ...newCards)
+            deck
           };
         }
         case CardType.DRAW: {
-          const newCards = sampleSize(deck, 2);
+          const newCards = deck.splice(0, 2);
 
           return {
             hands: {
@@ -137,7 +133,7 @@ export default {
               [nextPlayer.id]: [...nextPlayerHand, ...newCards]
             },
             activePlayer: nextPlayer,
-            deck: without(deck, ...newCards)
+            deck
           };
         }
         case CardType.SKIP: {
