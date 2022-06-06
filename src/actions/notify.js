@@ -91,13 +91,15 @@ export default {
       interaction,
       'You shall not pass (without first drawing a card)!'
     ),
+  notifyInvalidColorChange: (_, { interaction }) =>
+    replyMessage(interaction, 'You cannot change colors right now!'),
   notifyInvalidDraw: (_, { interaction }) =>
     replyMessage(
       interaction,
       'You have already drawn a card! Use `/play` or `/pass`!'
     ),
   notifyMissingCard: (_, { interaction }) =>
-    replyMessage(interaction, "You can't play a card you don't have!"),
+    replyMessage(interaction, 'You cannot play that card!'),
   notifyInvalidCard: ({ discardPile }, { card, interaction }) =>
     replyMessage(
       interaction,

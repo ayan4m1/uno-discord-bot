@@ -29,6 +29,9 @@ const createGame = () =>
         HAND_REQUEST: {
           actions: 'notifyHand',
           cond: 'isGameActive'
+        },
+        COLOR_CHANGE: {
+          actions: 'notifyInvalidColorChange'
         }
       },
       states: {
