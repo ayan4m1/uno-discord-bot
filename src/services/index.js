@@ -23,12 +23,21 @@ export default {
       hexColor = hexColors[discard.color];
     }
 
+    const activePlayerIndex = players.indexOf(activePlayer);
+
+    let handsArray = Object.entries(hands);
+
+    handsArray = [
+      ...handsArray.slice(activePlayerIndex),
+      ...handsArray.slice(0, activePlayerIndex)
+    ];
+
     let embed = new MessageEmbed({
       title: `${activePlayer.username}'s turn!`,
       description: `You have ${
         config.roundDelay / 1e3
       } seconds to \`/play\` or \`/draw\`.`,
-      fields: Object.entries(hands).map(([id, hand]) => ({
+      fields: handsArray.map(([id, hand]) => ({
         name: players.find((player) => player.id === id).username,
         value: `${hand.length} ${pluralize('cards', hand.length)}`
       })),
