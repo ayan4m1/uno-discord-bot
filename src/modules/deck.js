@@ -164,6 +164,21 @@ export class Card {
   }
 
   /**
+   * Compares one card to another, for sorting.
+   * @param {*} other The other card
+   * @returns 0 if cards are equal, -1 or 1 otherwise depending on their relative order
+   */
+  compareTo(other) {
+    if (this.equals(other)) {
+      return 0;
+    } else {
+      return this.color?.toUpperCase?.() > other?.color?.toUpperCase?.()
+        ? 1
+        : -1;
+    }
+  }
+
+  /**
    * Determines if the supplied card is the same as this one.
    * @param {Card} other The card to compare to
    * @returns {boolean} True if the card is the same, false otherwise

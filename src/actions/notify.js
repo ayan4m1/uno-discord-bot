@@ -115,7 +115,10 @@ export default {
     id: activePlayer.id
   })),
   notifyHand: async ({ hands }, { interaction, id }) => {
-    const hand = hands[id];
+    const hand = [...hands[id]];
+
+    hand.sort((a, b) => a.compareTo(b));
+
     const embed = new MessageEmbed({
       title: 'Your Hand',
       description: hand.map((card) => card.toString()).join(', ')
