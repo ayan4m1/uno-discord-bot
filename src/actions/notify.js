@@ -49,7 +49,9 @@ export default {
         ? new MessageEmbed({
             title: `Game with ${players.length} players`,
             image: {
-              url: discardPile[0].toUrl('M')
+              url: discardPile.length
+                ? discardPile[discardPile.length - 1].toUrl('M')
+                : null
             },
             description: `Discard Pile: ${discardPile.length} ${pluralize(
               'cards',
