@@ -1,0 +1,35 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("UNO_DB_URL")
+}
+
+model User {
+  id          BigInt     @id @default(autoincrement())
+  username    String     @db.VarChar(200)
+  nickname    String     @db.VarChar(200)
+  wonGames    Game[]
+  playedGames GameUser[]
+}
+
+model Game {
+  id       BigInt     @id @default(autoincrement())
+  started  DateTime
+  stopped  DateTime?
+  winnerId BigInt?
+  winner   User?      @relation(fields: [winnerId], references: [id])
+  players  GameUser[]
+}
+
+model GameUser {
+  gameId BigInt
+  userId BigInt
+  score  Int?
+  game   Game   @relation(fields: [gameId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@id([gameId, userId])
+}
