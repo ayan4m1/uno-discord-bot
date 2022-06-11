@@ -96,7 +96,7 @@ const createGame = () =>
           entry: ['notifyActivePlayerHand'],
           on: {
             GAME_END: {
-              target: 'idle'
+              target: 'stopGame'
             },
             CARD_PLAY: [
               {
@@ -287,10 +287,9 @@ const createGame = () =>
           }
         },
         stopGame: {
-          after: {
-            [config.endDelay]: {
-              target: 'idle'
-            }
+          invoke: {
+            src: 'stopGame',
+            onDone: 'idle'
           }
         }
       }

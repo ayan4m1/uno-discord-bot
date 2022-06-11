@@ -3,7 +3,7 @@ import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 
 import { uno as config } from '../modules/config.js';
-import { createScore, startGame } from '../modules/database.js';
+import { createScore, startGame, stopGame } from '../modules/database.js';
 import {
   replyEmbed,
   replyMessage,
@@ -118,8 +118,10 @@ export default {
     sendMessage(`Skipping ${activePlayer.username}`),
   createGame: ({ players }) => startGame(players),
   updateScores: async ({ gameId, hands, players }) => {
+    await stopGame(gameId);
     for (const { id, username } of players) {
       await createScore(gameId, { id, username }, scoreHand(hands[id]));
     }
-  }
+  },
+  stopGame: ({ gameId }) => stopGame(gameId)
 };
