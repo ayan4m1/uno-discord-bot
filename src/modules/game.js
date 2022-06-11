@@ -100,10 +100,6 @@ const createGame = () =>
             GAME_END: {
               target: 'stopGame'
             },
-            GAME_STOP: {
-              target: 'stopGame',
-              actions: 'notifyGameStop'
-            },
             CARD_PLAY: [
               {
                 actions: 'notifyInvalidPlayer',
