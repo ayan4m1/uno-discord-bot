@@ -87,7 +87,7 @@ export const getLeaderboard = async () => {
   try {
     const players = await prisma.user.findMany({
       take: 100,
-      include: { playedGames: true }
+      include: { playedGames: { include: { game: true } } }
     });
     const scores = {};
 
@@ -95,7 +95,9 @@ export const getLeaderboard = async () => {
       let score = 0,
         games = 0;
 
-      for (const game of player.playedGames) {
+      for (const game of player.playedGames.filter(
+        ({ gm }) => gm.stopped !== null
+      )) {
         score += game.score;
         games++;
       }
