@@ -95,10 +95,10 @@ export const getLeaderboard = async () => {
       let score = 0,
         games = 0;
 
-      for (const game of player.playedGames.filter(
-        ({ gm }) => gm.stopped !== null
+      for (const playedGame of player.playedGames.filter(
+        ({ game }) => game.stopped !== null
       )) {
-        score += game.score;
+        score += playedGame.score;
         games++;
       }
 
