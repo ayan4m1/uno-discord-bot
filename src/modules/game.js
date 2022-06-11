@@ -60,12 +60,14 @@ const createGame = () =>
             ]
           },
           on: {
-            PLAYER_ADD: {
-              actions: ['addPlayer', 'notifyAddPlayer']
-            },
-            PLAYER_REMOVE: {
-              actions: ['removePlayer', 'notifyRemovePlayer']
-            }
+            PLAYER_ADD: [
+              { actions: 'notifyInGame', cond: 'isPlayerInGame' },
+              { actions: ['addPlayer', 'notifyAddPlayer'] }
+            ],
+            PLAYER_REMOVE: [
+              { actions: 'notifyNotInGame', cond: 'isPlayerNotInGame' },
+              { actions: ['removePlayer', 'notifyRemovePlayer'] }
+            ]
           }
         },
         createGame: {

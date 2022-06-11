@@ -83,6 +83,10 @@ export default {
         description: `${username} has left the game!`
       })
     ),
+  notifyInGame: (_, { interaction }) =>
+    replyMessage(interaction, 'You are already in the game!'),
+  notifyNotInGame: (_, { interaction }) =>
+    replyMessage(interaction, 'You are not in the game!'),
   notifyInvalidAdd: (_, { interaction }) =>
     replyMessage(interaction, 'Sorry, you cannot join a game in progress!'),
   notifyInvalidRemove: (_, { interaction }) =>

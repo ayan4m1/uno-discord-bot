@@ -9,6 +9,11 @@ export default {
   isGameActive: ({ hands }) => Object.values(hands).length > 0,
   isGameOver: ({ hands }) =>
     Object.values(hands).some((hand) => hand.length === 0),
+  isPlayerInGame: ({ players }, { id }) =>
+    Boolean(players.find((player) => player.id === id)),
+  isPlayerNotInGame: negate(({ players }, { id }) =>
+    Boolean(players.find((player) => player.id === id))
+  ),
   isPlayerInvalid: negate(({ activePlayer }, { id }) => activePlayer.id === id),
   isCardMissing: negate(({ activePlayer, hands }, { card }) =>
     hands[activePlayer.id].some((handCard) => handCard.equals(card))
