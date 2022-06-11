@@ -12,7 +12,7 @@ export const handler = createInteractionHandler((interaction) => {
   } = interaction;
 
   return {
-    type: 'BOARD_REQUEST',
+    type: 'LEADERBOARD_REQUEST',
     id
   };
 });

@@ -30,6 +30,9 @@ const createGame = () =>
           actions: 'notifyHand',
           cond: 'isGameActive'
         },
+        LEADERBOARD_REQUEST: {
+          actions: 'notifyLeaderboard'
+        },
         COLOR_CHANGE: {
           actions: 'notifyInvalidColorChange'
         }
@@ -48,7 +51,7 @@ const createGame = () =>
           after: {
             [config.solicitDelay]: [
               {
-                target: 'startGame',
+                target: 'createGame',
                 cond: 'canGameStart'
               },
               {
@@ -62,6 +65,15 @@ const createGame = () =>
             },
             PLAYER_REMOVE: {
               actions: ['removePlayer', 'notifyRemovePlayer']
+            }
+          }
+        },
+        createGame: {
+          invoke: {
+            src: 'createGame',
+            onDone: {
+              target: 'startGame',
+              actions: 'assignGameId'
             }
           }
         },
@@ -142,6 +154,11 @@ const createGame = () =>
             },
             drawCard: {
               entry: ['drawCard', 'notifyDraw', 'notifyActivePlayerHand'],
+              after: {
+                [config.roundDelay]: {
+                  target: 'notifySkip'
+                }
+              },
               on: {
                 PLAYER_PASS: [
                   {
@@ -175,6 +192,12 @@ const createGame = () =>
             notifyWinner: {
               invoke: {
                 src: 'notifyWinner',
+                onDone: 'updateScores'
+              }
+            },
+            updateScores: {
+              invoke: {
+                src: 'updateScores',
                 onDone: {
                   actions: send('GAME_END')
                 }
@@ -280,5 +303,9 @@ const createGame = () =>
   );
 
 export const service = interpret(createGame()).onTransition((state) => {
-  log.debug(JSON.stringify(state.context, null, 2));
+  log.debug(
+    JSON.stringify(state.context, (_, value) =>
+      typeof value === 'bigint' ? value.toString() : value
+    )
+  );
 });

@@ -3,13 +3,19 @@ import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 
 import { uno as config } from '../modules/config.js';
+import { createScore, startGame } from '../modules/database.js';
 import {
   replyEmbed,
   replyMessage,
   sendEmbed,
   sendMessage
 } from '../modules/discord.js';
-import { CardType, hexColors, getCardColor } from '../modules/deck.js';
+import {
+  CardType,
+  hexColors,
+  getCardColor,
+  scoreHand
+} from '../modules/deck.js';
 
 export default {
   notifyRoundStart: ({ hands, players, color, discardPile, activePlayer }) => {
@@ -99,10 +105,21 @@ export default {
     );
     const winner = players.find((player) => player.id === winnerId);
 
-    return sendMessage(`${winner.username} is the winner!`);
+    return sendEmbed(
+      new MessageEmbed({
+        title: 'Game Over!',
+        description: `:tada: ${winner.username} is the winner! :tada:`
+      })
+    );
   },
   notifyPass: ({ activePlayer }, { interaction }) =>
     replyMessage(interaction, `${activePlayer.username} passed!`),
   notifySkip: ({ activePlayer }) =>
-    sendMessage(`Skipping ${activePlayer.username}`)
+    sendMessage(`Skipping ${activePlayer.username}`),
+  createGame: ({ players }) => startGame(players),
+  updateScores: async ({ gameId, hands, players }) => {
+    for (const { id, username } of players) {
+      await createScore(gameId, { id, username }, scoreHand(hands[id]));
+    }
+  }
 };

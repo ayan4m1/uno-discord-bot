@@ -4,6 +4,9 @@ import { sample, reverse, last, shuffle } from 'lodash-es';
 import { CardColor, CardType, createContext } from '../modules/deck.js';
 
 export default {
+  assignGameId: assign({
+    gameId: (_, { data }) => data
+  }),
   resetGameState: assign(createContext()),
   resetLastDrawPlayer: assign({
     lastDrawPlayer: () => null

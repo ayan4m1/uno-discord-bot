@@ -229,5 +229,18 @@ export const createContext = () => ({
   hands: {},
   players: [],
   activePlayer: null,
-  lastDrawPlayer: null
+  lastDrawPlayer: null,
+  gameId: null
 });
+
+const scoreCard = (card) => {
+  switch (card.type) {
+    case CardType.NUMBER:
+      return card.value;
+    default:
+      return 50;
+  }
+};
+
+export const scoreHand = (hand) =>
+  hand.reduce((score, card) => score + scoreCard(card), 0);

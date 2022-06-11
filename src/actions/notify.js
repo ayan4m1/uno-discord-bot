@@ -10,6 +10,7 @@ import {
   sendEmbed,
   sendPrivateEmbed
 } from '../modules/discord.js';
+import { getLeaderboard } from '../modules/database.js';
 
 const { pure } = actions;
 
@@ -118,7 +119,7 @@ export default {
     type: 'HAND_REQUEST',
     id: activePlayer.id
   })),
-  notifyHand: async ({ hands }, { interaction, id }) => {
+  notifyHand: ({ hands }, { interaction, id }) => {
     const hand = [...hands[id]];
 
     hand.sort((a, b) => a.compareTo(b));
@@ -133,5 +134,19 @@ export default {
     } else {
       return sendPrivateEmbed(id, embed);
     }
+  },
+  notifyLeaderboard: async (_, { interaction }) => {
+    const leaderboard = await getLeaderboard();
+
+    replyEmbed(
+      interaction,
+      new MessageEmbed({
+        title: 'Leaderboard',
+        fields: leaderboard.map((entry) => ({
+          name: entry.user.username,
+          value: entry.score
+        }))
+      })
+    );
   }
 };
