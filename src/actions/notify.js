@@ -150,8 +150,8 @@ export default {
 
     entries.sort(([, a], [, b]) => a.ratio - b.ratio);
 
-    const fields = entries.map(([username, { score, games, ratio }]) => ({
-      name: username,
+    const fields = entries.map(([username, { score, games, won, ratio }]) => ({
+      name: `${username} - ${won} ${pluralize('wins', won)}`,
       value: `${ratio.toFixed(2)} (${score} pts / ${games} games)`
     }));
 

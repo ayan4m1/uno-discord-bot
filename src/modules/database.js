@@ -104,6 +104,7 @@ export const getLeaderboard = async () => {
 
     for (const player of players) {
       let score = 0,
+        won = 0,
         games = 0;
 
       for (const playedGame of player.playedGames.filter(
@@ -111,12 +112,16 @@ export const getLeaderboard = async () => {
       )) {
         score += playedGame.score;
         games++;
+        if (playedGame.game.winnerId === player.id) {
+          won++;
+        }
       }
 
       if (games > 0) {
         scores[player.username] = {
           score,
           games,
+          won,
           ratio: score / games
         };
       }
