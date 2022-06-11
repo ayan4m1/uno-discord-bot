@@ -7,12 +7,12 @@ const prisma = new PrismaClient();
 
 export const mergeUser = async (user) => {
   try {
-    const { id } = await prisma.user.findUnique({ where: { id: user.id } });
+    const foundUser = await prisma.user.findUnique({ where: { id: user.id } });
 
-    if (id) {
+    if (foundUser) {
       await prisma.user.update({
         where: {
-          id
+          id: foundUser.id
         },
         data: {
           username: user.username
@@ -66,10 +66,15 @@ export const stopGame = async (id) => {
 
 export const createScore = async (gameId, user, score) => {
   try {
-    await prisma.gameUser.create({
+    await prisma.gameUser.update({
+      where: {
+        // eslint-disable-next-line camelcase
+        gameId_userId: {
+          gameId,
+          userId: user.id
+        }
+      },
       data: {
-        gameId,
-        userId: user.id,
         score
       }
     });
@@ -80,11 +85,31 @@ export const createScore = async (gameId, user, score) => {
 
 export const getLeaderboard = async () => {
   try {
-    // const players = await prisma.user.findMany({
-    //   where: {
-    //     playedGames:
-    //   }
-    // })
+    const players = await prisma.user.findMany({
+      take: 100,
+      include: { playedGames: true }
+    });
+    const scores = {};
+
+    for (const player of players) {
+      let score = 0,
+        games = 0;
+
+      for (const game of player.playedGames) {
+        score += game.score;
+        games++;
+      }
+
+      if (games > 0) {
+        scores[player.username] = {
+          score,
+          games,
+          ratio: score / games
+        };
+      }
+    }
+
+    return scores;
   } catch (error) {
     log.error(error.message);
   }

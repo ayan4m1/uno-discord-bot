@@ -138,14 +138,24 @@ export default {
   notifyLeaderboard: async (_, { interaction }) => {
     const leaderboard = await getLeaderboard();
 
-    replyEmbed(
+    if (!leaderboard) {
+      return replyMessage(interaction, 'Error fetching leaderboard data!');
+    }
+
+    const entries = Object.entries(leaderboard);
+
+    entries.sort(([, a], [, b]) => a.ratio - b.ratio);
+
+    const fields = entries.map(([username, { score, games, ratio }]) => ({
+      name: username,
+      value: `${ratio.toFixed(2)} (${score} pts / ${games} games)`
+    }));
+
+    return replyEmbed(
       interaction,
       new MessageEmbed({
         title: 'Leaderboard',
-        fields: leaderboard.map((entry) => ({
-          name: entry.user.username,
-          value: entry.score
-        }))
+        fields: fields.slice(0, Math.min(10, fields.length))
       })
     );
   }
