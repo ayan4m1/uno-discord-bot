@@ -3,7 +3,12 @@ import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 
 import { uno as config } from '../modules/config.js';
-import { createScore, startGame, stopGame } from '../modules/database.js';
+import {
+  createScore,
+  setWinner,
+  startGame,
+  stopGame
+} from '../modules/database.js';
 import {
   replyEmbed,
   replyMessage,
@@ -118,7 +123,12 @@ export default {
     sendMessage(`Skipping ${activePlayer.username}`),
   createGame: ({ players }) => startGame(players),
   updateScores: async ({ gameId, hands, players }) => {
+    const [winnerId] = Object.entries(hands).find(
+      ([, hand]) => hand.length === 0
+    );
+
     await stopGame(gameId);
+    await setWinner(gameId, winnerId);
     for (const { id, username } of players) {
       await createScore(gameId, { id, username }, scoreHand(hands[id]));
     }

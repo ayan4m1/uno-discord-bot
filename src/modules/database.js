@@ -64,6 +64,17 @@ export const stopGame = async (id) => {
   }
 };
 
+export const setWinner = async (id, winnerId) => {
+  try {
+    await prisma.game.update({
+      where: { id },
+      data: { winnerId }
+    });
+  } catch (error) {
+    log.error(error.message);
+  }
+};
+
 export const createScore = async (gameId, user, score) => {
   try {
     await prisma.gameUser.update({
