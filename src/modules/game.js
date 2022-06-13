@@ -83,7 +83,12 @@ const createGame = () =>
           }
         },
         startGame: {
-          entry: ['shufflePlayers', 'dealHands', 'notifyAllHands'],
+          entry: [
+            'shufflePlayers',
+            'activateNextPlayer',
+            'dealHands',
+            'notifyAllHands'
+          ],
           always: [{ target: 'startRound' }]
         },
         startRound: {
