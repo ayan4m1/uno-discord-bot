@@ -2,6 +2,8 @@ import { MessageEmbed } from 'discord.js';
 import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 import { send, actions } from 'xstate';
+import jsonfile from 'jsonfile';
+import { resolve } from 'path';
 
 import { uno as config } from '../modules/config.js';
 import {
@@ -13,6 +15,9 @@ import {
 import { getLeaderboard } from '../modules/database.js';
 
 const { pure } = actions;
+const { readFileSync } = jsonfile;
+
+const packageJson = readFileSync(resolve('.', 'package.json'));
 
 export default {
   notifySolicit: (_, { interaction }) =>
@@ -162,5 +167,37 @@ export default {
         fields: fields.slice(0, Math.min(10, fields.length))
       })
     );
-  }
+  },
+  notifyHelp: (_, { interaction }) =>
+    replyEmbed(
+      interaction,
+      new MessageEmbed({
+        title: 'Help!',
+        description: `To play Uno, an admin starts the game with \`/start\`. Then, players join with \`/join\`. Admins can cancel a game in-progress with \`/stop\`.
+
+        You can leave before the game begins with \`/leave\`.
+
+        Once the game begins, all players receive their hands via PM. The player order is randomized.
+
+        To play a card, use e.g. \`/play G2\`.
+
+        If you cannot play a card, use \`/draw\`. You can then either \`/play\` it or use \`/pass\`.
+
+        When playing a Wild card, you must choose the follow-up color for play to continue using e.g. \`/color red\`.
+
+        At any time during a game, you can get a copy of your hand sent to you by using the \`/hand\` command.
+
+        At any time during a game, you can get information on the size of decks and hands by using the \`/status\` command.
+
+        Your score is kept between games, view the leaderboard using \`/board\`!`,
+        fields: [{ name: 'Uno Rules', value: 'https://www.unorules.com/' }],
+        image: {
+          url: config.helpImageUrl
+        },
+        author: {
+          name: `Uno ${packageJson.version} by ayan4m1`,
+          url: 'https://github.com/ayan4m1/uno-discord-bot/'
+        }
+      })
+    )
 };

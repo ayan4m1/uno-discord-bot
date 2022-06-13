@@ -33,6 +33,9 @@ const createGame = () =>
         LEADERBOARD_REQUEST: {
           actions: 'notifyLeaderboard'
         },
+        HELP_REQUEST: {
+          actions: 'notifyHelp'
+        },
         COLOR_CHANGE: {
           actions: 'notifyInvalidColorChange'
         }

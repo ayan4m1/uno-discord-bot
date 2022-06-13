@@ -19,6 +19,7 @@ export const uno = {
   solicitDelay: parseInt(process.env.UNO_GAME_SOLICIT_DELAY || 60000, 10),
   roundDelay: parseInt(process.env.UNO_GAME_ROUND_DELAY || 120000, 10),
   cardBaseUrl: process.env.UNO_GAME_CARD_BASE_URL,
+  helpImageUrl: process.env.UNO_HELP_IMAGE_URL,
   debugMode: process.env.UNO_GAME_DEBUG_MODE?.toLowerCase?.() === 'true'
 };
 
