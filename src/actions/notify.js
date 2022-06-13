@@ -121,9 +121,9 @@ export default {
     replyMessage(interaction, `${color} is not a valid color (R, G, B, or Y)`),
   notifyDraw: ({ activePlayer }, { interaction }) =>
     replyMessage(interaction, `${activePlayer.username} drew a card!`),
-  notifyAllHands: pure(({ activePlayer, players }) =>
+  notifyAllHands: pure(({ players }) =>
     players
-      .filter((player) => player.id !== activePlayer.id)
+      .slice(1)
       .map((player) => send({ type: 'HAND_REQUEST', id: player.id }))
   ),
   notifyActivePlayerHand: send(({ activePlayer }) => ({
