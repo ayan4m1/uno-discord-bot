@@ -26,10 +26,13 @@ const createGame = () =>
         PLAYER_PASS: {
           actions: 'notifyInvalidPass'
         },
-        HAND_REQUEST: {
-          actions: 'notifyHand',
-          cond: 'isGameActive'
-        },
+        HAND_REQUEST: [
+          {
+            actions: 'notifyHand',
+            cond: 'isGameActive'
+          },
+          { actions: 'notifyInactiveGame' }
+        ],
         LEADERBOARD_REQUEST: {
           actions: 'notifyLeaderboard'
         },
@@ -138,9 +141,6 @@ const createGame = () =>
             },
             PLAYER_PASS: {
               actions: 'notifyInvalidPass'
-            },
-            HAND_REQUEST: {
-              actions: 'notifyHand'
             }
           },
           initial: 'idle',

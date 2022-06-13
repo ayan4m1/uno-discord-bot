@@ -10,6 +10,7 @@ import {
   replyEmbed,
   replyMessage,
   sendEmbed,
+  sendMessage,
   sendPrivateEmbed
 } from '../modules/discord.js';
 import { getLeaderboard } from '../modules/database.js';
@@ -130,7 +131,13 @@ export default {
     type: 'HAND_REQUEST',
     id: activePlayer.id
   })),
+  notifyInactiveGame: (_, { interaction }) =>
+    replyMessage(interaction, 'No game is active!'),
   notifyHand: ({ hands }, { interaction, id }) => {
+    if (!Array.isArray(hands[id])) {
+      return sendMessage("Could not find that player's hand");
+    }
+
     const hand = [...hands[id]];
 
     hand.sort((a, b) => a.compareTo(b));

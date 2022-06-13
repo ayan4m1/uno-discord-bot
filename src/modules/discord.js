@@ -36,11 +36,11 @@ export const registerCommands = async () => {
 };
 
 client.on('interactionCreate', async (interaction) => {
-  try {
-    if (!interaction.isCommand()) {
-      return;
-    }
+  if (!interaction.isCommand()) {
+    return;
+  }
 
+  try {
     const { commandName } = interaction;
     const command = client.commands.get(commandName);
 
@@ -56,7 +56,7 @@ client.on('interactionCreate', async (interaction) => {
     log.error(error.message);
     log.error(error.stack);
 
-    await interaction.reply({
+    await interaction.followUp({
       content: 'There was an error executing this command!',
       ephemeral: true
     });
