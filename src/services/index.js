@@ -36,6 +36,10 @@ export default {
 
     const activePlayerIndex = players.indexOf(activePlayer);
 
+    if (activePlayerIndex === -1) {
+      return sendMessage('Error determining who the active player is!');
+    }
+
     let handsArray = Object.entries(hands);
 
     handsArray = [
