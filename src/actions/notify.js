@@ -140,9 +140,10 @@ export default {
     }
 
     const hand = [...hands[id]];
-    const { height, width, buffer } = await createCardMontage(hand);
 
     hand.sort((a, b) => a.compareTo(b));
+
+    const { height, width, buffer } = await createCardMontage(hand);
 
     const embed = new MessageEmbed({
       title: 'Your Hand',
