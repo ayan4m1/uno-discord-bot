@@ -1,28 +1,53 @@
 import { basename } from 'path';
-import gm from 'gm';
+import canvas from 'canvas';
 
-export const createCardMontage = (cards) =>
-  new Promise((resolve, reject) => {
-    const images = cards.map(
-      (card) => `./src/assets/${basename(card.toUrl('M'))}`
+const { createCanvas, loadImage } = canvas;
+const maxColumns = 10;
+const cardWidth = 64;
+const cardHeight = 93;
+const cardPadding = 4;
+const paddedWidth = cardWidth + cardPadding * 2;
+const paddedHeight = cardHeight + cardPadding * 2;
+
+export const createCardMontage = async (cards) => {
+  const images = await Promise.all(
+    cards.map((card) => loadImage(`./src/assets/${basename(card.toUrl('M'))}`))
+  );
+
+  const width = (images.length % maxColumns) * paddedWidth;
+  const height = Math.ceil(images.length / maxColumns) * paddedHeight;
+
+  const img = createCanvas(width, height);
+  const ctx = img.getContext('2d');
+
+  let i = 0;
+
+  for (const image of images) {
+    const row = Math.floor(i / maxColumns);
+    const col = i % maxColumns;
+
+    ctx.drawImage(
+      image,
+      col * paddedWidth,
+      row * paddedHeight,
+      cardWidth,
+      cardHeight
     );
+    i++;
+  }
 
-    const [firstImage, ...otherImages] = images;
+  return new Promise((resolve, reject) => {
+    const buffers = [];
+    const stream = img.createPNGStream();
 
-    let operation = gm(firstImage);
-
-    for (const image of otherImages) {
-      operation = operation.montage(image);
-    }
-
-    operation
-      .tile('x10')
-      .geometry('128x186+2+2>')
-      .toBuffer('PNG', (err, buffer) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(buffer);
-        }
-      });
+    stream.on('error', reject);
+    stream.on('data', (chunk) => buffers.push(chunk));
+    stream.on('end', () =>
+      resolve({
+        height,
+        width,
+        buffer: Buffer.concat(buffers)
+      })
+    );
   });
+};

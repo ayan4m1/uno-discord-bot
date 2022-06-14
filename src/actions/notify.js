@@ -1,4 +1,4 @@
-import { MessageEmbed } from 'discord.js';
+import { MessageEmbed, MessageAttachment } from 'discord.js';
 import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 import { send, actions } from 'xstate';
@@ -14,6 +14,7 @@ import {
   sendPrivateEmbed
 } from '../modules/discord.js';
 import { getLeaderboard } from '../modules/database.js';
+import { createCardMontage } from '../modules/montage.js';
 
 const { pure } = actions;
 const { readFileSync } = jsonfile;
@@ -133,24 +134,31 @@ export default {
   })),
   notifyInactiveGame: (_, { interaction }) =>
     replyMessage(interaction, 'No game is active!'),
-  notifyHand: ({ hands }, { interaction, id }) => {
+  notifyHand: async ({ hands }, { interaction, id }) => {
     if (!Array.isArray(hands[id])) {
       return sendMessage("Could not find that player's hand");
     }
 
     const hand = [...hands[id]];
+    const { height, width, buffer } = await createCardMontage(hand);
 
     hand.sort((a, b) => a.compareTo(b));
 
     const embed = new MessageEmbed({
       title: 'Your Hand',
-      description: hand.map((card) => card.toString()).join(', ')
+      description: hand.map((card) => card.toString()).join(', '),
+      image: {
+        url: 'attachment://hand.png',
+        height: height * 2,
+        width: width * 2
+      }
     });
+    const attachments = [new MessageAttachment(buffer, 'hand.png')];
 
     if (interaction) {
-      return replyEmbed(interaction, embed);
+      return replyEmbed(interaction, embed, attachments);
     } else {
-      return sendPrivateEmbed(id, embed);
+      return sendPrivateEmbed(id, embed, attachments);
     }
   },
   notifyLeaderboard: async (_, { interaction }) => {
