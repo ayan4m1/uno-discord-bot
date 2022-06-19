@@ -14,7 +14,7 @@ export const createCardMontage = async (cards) => {
     cards.map((card) => loadImage(`./src/assets/${basename(card.toUrl('M'))}`))
   );
 
-  const width = (images.length % maxColumns) * paddedWidth;
+  const width = Math.min(maxColumns, images.length) * paddedWidth;
   const height = Math.ceil(images.length / maxColumns) * paddedHeight;
 
   const img = createCanvas(width, height);
