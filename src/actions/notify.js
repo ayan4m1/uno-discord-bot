@@ -150,8 +150,8 @@ export default {
       description: hand.map((card) => card.toString()).join(', '),
       image: {
         url: 'attachment://hand.png',
-        height: height * 2,
-        width: width * 2
+        height,
+        width
       }
     });
     const attachments = [new MessageAttachment(buffer, 'hand.png')];
