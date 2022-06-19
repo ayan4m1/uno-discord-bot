@@ -1,7 +1,14 @@
 import { send, assign } from 'xstate';
 import { sample, reverse, last, shuffle } from 'lodash-es';
 
-import { CardColor, CardType, createContext } from '../modules/deck.js';
+import {
+  CardColor,
+  CardType,
+  createContext,
+  DrawSize,
+  HandSize,
+  WildDrawSize
+} from '../modules/deck.js';
 
 export default {
   assignGameId: assign({
@@ -42,7 +49,7 @@ export default {
     const remainingDeck = [...shuffle(deck)];
 
     for (const player of players) {
-      const hand = remainingDeck.splice(0, 7);
+      const hand = remainingDeck.splice(0, HandSize);
 
       hands[player.id] = hand;
     }
@@ -116,7 +123,7 @@ export default {
 
       switch (discard.type) {
         case CardType.WILD_DRAW: {
-          const newCards = deck.splice(0, 4);
+          const newCards = deck.splice(0, WildDrawSize);
 
           return {
             hands: {
@@ -128,7 +135,7 @@ export default {
           };
         }
         case CardType.DRAW: {
-          const newCards = deck.splice(0, 2);
+          const newCards = deck.splice(0, DrawSize);
 
           return {
             hands: {

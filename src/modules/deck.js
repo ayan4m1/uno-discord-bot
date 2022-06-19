@@ -1,5 +1,9 @@
 import { uno as config } from './config.js';
 
+export const HandSize = 7;
+export const WildDrawSize = 4;
+export const DrawSize = 2;
+
 export const CardType = {
   NUMBER: 'number',
   WILD: 'wild',
