@@ -25,7 +25,7 @@ export const handler = createInteractionHandler((interaction) => {
   } = interaction;
 
   return {
-    type: 'COLOR_CHANGE',
+    type: 'PLAYER_CHANGE_COLOR',
     id,
     color: getCardColor(options.getString('color', true))
   };

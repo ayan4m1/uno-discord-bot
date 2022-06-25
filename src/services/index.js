@@ -91,7 +91,7 @@ export default {
     );
   },
   notifyNoPlayers: () =>
-    sendMessage('Cancelled the game because no players joined!'),
+    sendMessage('Cancelled the game because there were not enough players!'),
   notifyColorChange: ({ color, activePlayer }, { interaction }) =>
     replyMessage(
       interaction,

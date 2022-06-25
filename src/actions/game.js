@@ -11,16 +11,31 @@ import {
 } from '../modules/deck.js';
 
 export default {
+  /**
+   * Take the gameId from the database result and set it in the context
+   */
   assignGameId: assign({
     gameId: (_, { data }) => data
   }),
+  /**
+   * Create a brand new context
+   */
   resetGameState: assign(createContext()),
+  /**
+   * Set lastDrawPlayer to null
+   */
   resetLastDrawPlayer: assign({
     lastDrawPlayer: () => null
   }),
+  /**
+   * Shuffle all players
+   */
   shufflePlayers: assign({
     players: ({ players }) => shuffle(players)
   }),
+  /**
+   * Advance to the next player
+   */
   activateNextPlayer: assign({
     activePlayer: ({ players, activePlayer }) => {
       const currentIndex = players.indexOf(activePlayer);
@@ -30,6 +45,9 @@ export default {
       ];
     }
   }),
+  /**
+   * Add a new player to the pending game
+   */
   addPlayer: assign({
     players: ({ players }, { id, username }) => [
       ...players,
@@ -39,10 +57,16 @@ export default {
       }
     ]
   }),
+  /**
+   * Remove an existing player from a pending game
+   */
   removePlayer: assign({
     players: ({ players }, { id }) =>
       players.filter((player) => player.id !== id)
   }),
+  /**
+   * Remove an existing player from an active game
+   */
   removePlayerMidgame: assign(
     ({ discardPile, players, hands, activePlayer }, { id }) => {
       const playerIndex = players.findIndex((player) => player.id === id);
@@ -72,6 +96,9 @@ export default {
       };
     }
   ),
+  /**
+   * Deal out hands and set up discardPile
+   */
   dealHands: assign(({ deck, players }) => {
     const hands = {};
 
@@ -104,6 +131,9 @@ export default {
       discardPile
     };
   }),
+  /**
+   * Remove a card from the active player's hand and add it to the discard pile
+   */
   playCard: assign(({ discardPile, hands, activePlayer }, { card }) => {
     const hand = [...hands[activePlayer.id]];
 
@@ -120,6 +150,9 @@ export default {
       discardPile: [...discardPile, card]
     };
   }),
+  /**
+   * Deal a card from the deck to the active player's hand
+   */
   drawCard: assign(({ activePlayer, hands, deck }) => {
     const [newCard] = deck.splice(0, 1);
     const hand = [...hands[activePlayer.id], newCard];
@@ -133,13 +166,22 @@ export default {
       lastDrawPlayer: activePlayer
     };
   }),
+  /**
+   * Change the active color for wilds
+   */
   changeColor: assign({
     color: (_, { color }) => color
   }),
+  /**
+   * Pick a random color for wilds
+   */
   changeColorRandom: send(() => ({
     type: 'PLAYER_CHANGE_COLOR',
     color: sample(Object.values(CardColor))
   })),
+  /**
+   * Handle special (i.e. non-numeric) card effects
+   */
   handleSpecialCard: assign(
     ({ activePlayer, players, deck, hands, discardPile }) => {
       const discard = last(discardPile);
@@ -198,7 +240,10 @@ export default {
       }
     }
   ),
-  checkEmptyDeck: assign(({ deck, discardPile }) => {
+  /**
+   * Shuffle the discardPile into the deck
+   */
+  rebuildDeck: assign(({ deck, discardPile }) => {
     if (deck.length > 0) {
       return {};
     }

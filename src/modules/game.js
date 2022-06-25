@@ -17,17 +17,29 @@ const createGame = () =>
       context: createContext(),
       on: {
         GAME_STOP: {
-          target: 'idle',
-          actions: 'notifyGameStop'
+          actions: 'notifyGameStop',
+          target: 'idle'
         },
         GAME_STATUS: {
           actions: 'notifyGameStatus'
+        },
+        PLAYER_ADD: {
+          actions: 'notifyInvalidAdd'
+        },
+        PLAYER_REMOVE: {
+          actions: 'notifyInvalidRemove'
         },
         PLAYER_PASS: {
           actions: 'notifyInvalidPass'
         },
         PLAYER_CHANGE_COLOR: {
           actions: 'notifyInvalidColorChange'
+        },
+        CARD_PLAY: {
+          actions: 'notifyInvalidPlay'
+        },
+        CARD_DRAW: {
+          actions: 'notifyInvalidDraw'
         },
         HAND_REQUEST: [
           {
@@ -41,9 +53,6 @@ const createGame = () =>
         },
         HELP_REQUEST: {
           actions: 'notifyHelp'
-        },
-        COLOR_CHANGE: {
-          actions: 'notifyInvalidColorChange'
         }
       },
       states: {
@@ -98,7 +107,7 @@ const createGame = () =>
           always: [{ target: 'startRound' }]
         },
         startRound: {
-          entry: ['resetLastDrawPlayer', 'checkEmptyDeck'],
+          entry: ['resetLastDrawPlayer'],
           invoke: {
             src: 'notifyRoundStart',
             onDone: 'round'
@@ -107,7 +116,8 @@ const createGame = () =>
         round: {
           entry: ['notifyActivePlayerHand'],
           on: {
-            GAME_END: {
+            GAME_STOP: {
+              actions: 'notifyGameStop',
               target: 'stopGame'
             },
             CARD_PLAY: [
@@ -136,12 +146,12 @@ const createGame = () =>
                 target: '.drawCard'
               }
             ],
-            PLAYER_ADD: {
-              actions: 'notifyInvalidAdd'
-            },
-            PLAYER_REMOVE: {
-              actions: 'notifyInvalidRemove'
-            },
+            PLAYER_REMOVE: [
+              { actions: 'notifyNotInGame', cond: 'isPlayerNotInGame' },
+              {
+                target: '.removePlayer'
+              }
+            ],
             PLAYER_PASS: {
               actions: 'notifyInvalidPass'
             }
@@ -158,7 +168,7 @@ const createGame = () =>
             notifySkip: {
               invoke: {
                 src: 'notifySkip',
-                onDone: 'done'
+                onDone: 'finishRound'
               }
             },
             drawCard: {
@@ -182,7 +192,7 @@ const createGame = () =>
                     target: 'notifyPass'
                   }
                 ],
-                CARD_DRAW: [{ actions: 'notifyInvalidDraw' }]
+                CARD_DRAW: [{ actions: 'notifyDuplicateDraw' }]
               }
             },
             playCard: {
@@ -208,7 +218,7 @@ const createGame = () =>
               invoke: {
                 src: 'updateScores',
                 onDone: {
-                  actions: send('GAME_END')
+                  actions: send('GAME_STOP')
                 }
               }
             },
@@ -227,13 +237,13 @@ const createGame = () =>
             checkColor: {
               always: [
                 {
-                  target: 'changeColorNeeded',
+                  target: 'notifyColorChangeNeeded',
                   cond: 'isColorChangeNeeded'
                 },
                 { target: 'checkSpecial' }
               ]
             },
-            changeColorNeeded: {
+            notifyColorChangeNeeded: {
               invoke: {
                 src: 'notifyColorChangeNeeded',
                 onDone: 'changeColor'
@@ -257,13 +267,13 @@ const createGame = () =>
                     cond: 'isColorInvalid'
                   },
                   {
-                    target: 'notifyChangeColor',
+                    target: 'notifyColorChange',
                     actions: 'changeColor'
                   }
                 ]
               }
             },
-            notifyChangeColor: {
+            notifyColorChange: {
               invoke: {
                 src: 'notifyColorChange',
                 onDone: 'checkSpecial'
@@ -272,21 +282,35 @@ const createGame = () =>
             checkSpecial: {
               always: [
                 { target: 'specialCard', cond: 'isSpecialCardPlayed' },
-                { target: 'done' }
+                { target: 'finishRound' }
               ]
             },
             specialCard: {
               entry: 'handleSpecialCard',
-              always: [{ target: 'done' }]
+              always: [{ target: 'finishRound' }]
             },
             notifyPass: {
               invoke: {
                 src: 'notifyPass',
-                onDone: 'done'
+                onDone: 'finishRound'
               }
             },
+            removePlayer: {
+              entry: ['notifyRemovePlayer', 'removePlayerMidgame'],
+              always: [
+                { actions: send('GAME_STOP'), cond: 'isOnePlayerGame' },
+                { target: 'finishRound', cond: 'isPlayerActive' },
+                { target: 'idle' }
+              ]
+            },
+            finishRound: {
+              exit: ['activateNextPlayer', 'resetLastDrawPlayer'],
+              always: [
+                { actions: 'rebuildDeck', cond: 'isDeckEmpty' },
+                { target: 'done' }
+              ]
+            },
             done: {
-              exit: 'activateNextPlayer',
               type: 'final'
             }
           },

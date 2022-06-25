@@ -105,9 +105,13 @@ export default {
       interaction,
       'You shall not pass (without first drawing a card)!'
     ),
+  notifyInvalidPlay: (_, { interaction }) =>
+    replyMessage(interaction, 'You cannot play now!'),
+  notifyInvalidDraw: (_, { interaction }) =>
+    replyMessage(interaction, 'You cannot draw now!'),
   notifyInvalidColorChange: (_, { interaction }) =>
     replyMessage(interaction, 'You cannot change colors right now!'),
-  notifyInvalidDraw: (_, { interaction }) =>
+  notifyDuplicateDraw: (_, { interaction }) =>
     replyMessage(
       interaction,
       'You have already drawn a card! Use `/play` or `/pass`!'

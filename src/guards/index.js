@@ -1,19 +1,21 @@
 import { negate, last } from 'lodash-es';
 
-import { uno as config } from '../modules/config.js';
 import { CardType, getCardColor } from '../modules/deck.js';
 
 export default {
-  // debugMode allows game to start with 1 player
-  canGameStart: ({ players }) => players.length > (config.debugMode ? 0 : 1),
+  canGameStart: ({ players }) => players.length > 1,
   isGameActive: ({ hands }) => Object.values(hands).length > 0,
   isGameOver: ({ hands }) =>
     Object.values(hands).some((hand) => hand.length === 0),
+  isOnePlayerGame: ({ players }) => players.length === 1,
+  isDeckEmpty: ({ deck }) => deck.length === 0,
   isPlayerInGame: ({ players }, { id }) =>
     Boolean(players.find((player) => player.id === id)),
   isPlayerNotInGame: negate(({ players }, { id }) =>
     Boolean(players.find((player) => player.id === id))
   ),
+  isPlayerActive: ({ players, activePlayer }, { id }) =>
+    players.find((player) => player.id === activePlayer.id).id === id,
   isPlayerInvalid: negate(({ activePlayer }, { id }) => activePlayer.id === id),
   isCardMissing: negate(({ activePlayer, hands }, { card }) =>
     hands[activePlayer.id].some((handCard) => handCard.equals(card))
