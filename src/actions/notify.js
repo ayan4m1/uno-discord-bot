@@ -39,14 +39,14 @@ export default {
         description: `Dealing cards to ${players.length} players...`
       })
     ),
-  notifyGameStop: (_, { interaction }) =>
-    replyEmbed(
-      interaction,
-      new MessageEmbed({
-        title: 'Game stopped!',
-        description: 'The game was stopped.'
-      })
-    ),
+  notifyGameStop: (_, { interaction }) => {
+    const embed = new MessageEmbed({
+      title: 'Game stopped!',
+      description: 'The game was stopped.'
+    });
+
+    return interaction ? replyEmbed(interaction, embed) : sendEmbed(embed);
+  },
   notifyGameStatus: (
     { activePlayer, players, hands, discardPile, deck },
     { interaction }

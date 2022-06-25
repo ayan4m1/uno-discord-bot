@@ -7,6 +7,6 @@ export const data = new SlashCommandBuilder()
   .setDescription('Draws a card from the discard pile');
 
 export const handler = createInteractionHandler(({ user: { id } }) => ({
-  type: 'CARD_DRAW',
+  type: 'PLAYER_DRAW',
   id
 }));

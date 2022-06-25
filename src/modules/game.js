@@ -38,7 +38,7 @@ const createGame = () =>
         CARD_PLAY: {
           actions: 'notifyInvalidPlay'
         },
-        CARD_DRAW: {
+        PLAYER_DRAW: {
           actions: 'notifyInvalidDraw'
         },
         HAND_REQUEST: [
@@ -116,10 +116,6 @@ const createGame = () =>
         round: {
           entry: ['notifyActivePlayerHand'],
           on: {
-            GAME_STOP: {
-              actions: 'notifyGameStop',
-              target: 'stopGame'
-            },
             CARD_PLAY: [
               {
                 actions: 'notifyInvalidPlayer',
@@ -137,7 +133,7 @@ const createGame = () =>
                 target: '.playCard'
               }
             ],
-            CARD_DRAW: [
+            PLAYER_DRAW: [
               {
                 actions: 'notifyInvalidPlayer',
                 cond: 'isPlayerInvalid'
@@ -192,7 +188,7 @@ const createGame = () =>
                     target: 'notifyPass'
                   }
                 ],
-                CARD_DRAW: [{ actions: 'notifyDuplicateDraw' }]
+                PLAYER_DRAW: [{ actions: 'notifyDuplicateDraw' }]
               }
             },
             playCard: {
@@ -298,7 +294,11 @@ const createGame = () =>
             removePlayer: {
               entry: ['notifyRemovePlayer', 'removePlayerMidgame'],
               always: [
-                { actions: send('GAME_STOP'), cond: 'isOnePlayerGame' },
+                {
+                  actions: send('GAME_STOP'),
+                  target: 'idle',
+                  cond: 'isOnePlayerGame'
+                },
                 { target: 'finishRound', cond: 'isPlayerActive' },
                 { target: 'idle' }
               ]
