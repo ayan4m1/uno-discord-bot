@@ -26,6 +26,9 @@ const createGame = () =>
         PLAYER_PASS: {
           actions: 'notifyInvalidPass'
         },
+        PLAYER_CHANGE_COLOR: {
+          actions: 'notifyInvalidColorChange'
+        },
         HAND_REQUEST: [
           {
             actions: 'notifyHand',
@@ -244,7 +247,7 @@ const createGame = () =>
                 }
               },
               on: {
-                COLOR_CHANGE: [
+                PLAYER_CHANGE_COLOR: [
                   {
                     actions: 'notifyInvalidPlayer',
                     cond: 'isPlayerInvalid'

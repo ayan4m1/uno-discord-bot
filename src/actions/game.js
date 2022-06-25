@@ -137,7 +137,7 @@ export default {
     color: (_, { color }) => color
   }),
   changeColorRandom: send(() => ({
-    type: 'COLOR_CHANGE',
+    type: 'PLAYER_CHANGE_COLOR',
     color: sample(Object.values(CardColor))
   })),
   handleSpecialCard: assign(
