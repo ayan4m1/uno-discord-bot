@@ -292,12 +292,12 @@ const createGame = () =>
               }
             },
             removePlayer: {
-              entry: ['notifyRemovePlayer', 'removePlayerMidgame'],
+              exit: ['notifyRemovePlayer', 'removePlayerMidgame'],
               always: [
                 {
                   actions: send('GAME_STOP'),
                   target: 'idle',
-                  cond: 'isOnePlayerGame'
+                  cond: 'isTwoPlayerGame'
                 },
                 { target: 'finishRound', cond: 'isPlayerActive' },
                 { target: 'idle' }

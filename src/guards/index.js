@@ -7,7 +7,7 @@ export default {
   isGameActive: ({ hands }) => Object.values(hands).length > 0,
   isGameOver: ({ hands }) =>
     Object.values(hands).some((hand) => hand.length === 0),
-  isOnePlayerGame: ({ players }) => players.length === 1,
+  isTwoPlayerGame: ({ players }) => players.length === 2,
   isDeckEmpty: ({ deck }) => deck.length === 0,
   isPlayerInGame: ({ players }, { id }) =>
     Boolean(players.find((player) => player.id === id)),
