@@ -67,35 +67,19 @@ export default {
   /**
    * Remove an existing player from an active game
    */
-  removePlayerMidgame: assign(
-    ({ discardPile, players, hands, activePlayer }, { id }) => {
-      const playerIndex = players.findIndex((player) => player.id === id);
-      const activePlayerIndex = players.findIndex(
-        (player) => player.id === activePlayer.id
-      );
+  removePlayerMidgame: assign(({ discardPile, players, hands }, { id }) => {
+    const newDiscard = [...discardPile];
+    const newHands = { ...hands };
 
-      let nextPlayer = activePlayer;
+    newDiscard.push.apply(newDiscard, newHands[id]);
+    delete newHands[id];
 
-      if (playerIndex === activePlayerIndex) {
-        nextPlayer =
-          players[
-            activePlayerIndex === players.length - 1 ? 0 : activePlayerIndex + 1
-          ];
-      }
-
-      const newDiscard = [...discardPile];
-      const newHands = { ...hands };
-
-      newDiscard.push.apply(newDiscard, newHands[id]);
-      delete newHands[id];
-
-      return {
-        hands: newHands,
-        players: players.filter((player) => player.id !== id),
-        activePlayer: nextPlayer
-      };
-    }
-  ),
+    return {
+      discardPile: newDiscard,
+      hands: newHands,
+      players: players.filter((player) => player.id !== id)
+    };
+  }),
   /**
    * Deal out hands and set up discardPile
    */

@@ -145,7 +145,16 @@ const createGame = () =>
             PLAYER_REMOVE: [
               { actions: 'notifyNotInGame', cond: 'isPlayerNotInGame' },
               {
-                target: '.removePlayer'
+                actions: send('GAME_STOP'),
+                cond: 'isTwoPlayerGame'
+              },
+              {
+                actions: ['notifyRemovePlayer', 'removePlayerMidgame'],
+                target: '.finishRound',
+                cond: 'isPlayerActive'
+              },
+              {
+                actions: ['notifyRemovePlayer', 'removePlayerMidgame']
               }
             ],
             PLAYER_PASS: {
@@ -290,18 +299,6 @@ const createGame = () =>
                 src: 'notifyPass',
                 onDone: 'finishRound'
               }
-            },
-            removePlayer: {
-              exit: ['notifyRemovePlayer', 'removePlayerMidgame'],
-              always: [
-                {
-                  actions: send('GAME_STOP'),
-                  target: 'idle',
-                  cond: 'isTwoPlayerGame'
-                },
-                { target: 'finishRound', cond: 'isPlayerActive' },
-                { target: 'idle' }
-              ]
             },
             finishRound: {
               exit: ['activateNextPlayer', 'resetLastDrawPlayer'],
