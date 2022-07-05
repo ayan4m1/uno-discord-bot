@@ -95,9 +95,9 @@ export default {
   notifyNotInGame: (_, { interaction }) =>
     replyMessage(interaction, 'You are not in the game!'),
   notifyInvalidAdd: (_, { interaction }) =>
-    replyMessage(interaction, 'Sorry, you cannot join a game in progress!'),
+    replyMessage(interaction, 'Sorry, you cannot join now!'),
   notifyInvalidRemove: (_, { interaction }) =>
-    replyMessage(interaction, 'Sorry, you cannot leave a game in progress!'),
+    replyMessage(interaction, 'Sorry, you cannot leave now!'),
   notifyInvalidPlayer: (_, { interaction }) =>
     replyMessage(interaction, "It's not your turn!"),
   notifyInvalidPass: (_, { interaction }) =>
