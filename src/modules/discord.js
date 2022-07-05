@@ -56,10 +56,16 @@ client.on('interactionCreate', async (interaction) => {
     log.error(error.message);
     log.error(error.stack);
 
-    await interaction.followUp({
+    const message = {
       content: 'There was an error executing this command!',
       ephemeral: true
-    });
+    };
+
+    if (!interaction.replied) {
+      await interaction.reply(message);
+    } else {
+      await interaction.followUp(message);
+    }
   }
 });
 
