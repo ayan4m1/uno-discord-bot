@@ -241,6 +241,13 @@ const scoreCard = (card) => {
   switch (card.type) {
     case CardType.NUMBER:
       return card.value;
+    case CardType.DRAW:
+    case CardType.SKIP:
+    case CardType.REVERSE:
+      return 10;
+    case CardType.WILD:
+      return 25;
+    case CardType.WILD_DRAW:
     default:
       return 50;
   }
