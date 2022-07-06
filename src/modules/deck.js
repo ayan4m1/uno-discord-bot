@@ -93,6 +93,7 @@ export class Card {
   static fromIndex(index = 0) {
     const result = new Card();
 
+    // four wild draw, four wild
     if (index > 107 || index < 0) {
       return null;
     } else if (index > 103) {
@@ -103,6 +104,7 @@ export class Card {
       return result;
     }
 
+    // 25 cards of each color
     const colorIndex = Math.floor(index / 25);
     const valueIndex = index % 25;
 
@@ -115,10 +117,13 @@ export class Card {
     ][colorIndex];
 
     if (valueIndex < 10) {
+      // handle 0-9
       result.value = valueIndex;
     } else if (valueIndex < 19) {
+      // handle 10-19 (0-9 again)
       result.value = valueIndex - 9;
     } else {
+      // handle special cards
       const typeIndex = (valueIndex - 19) % 3;
 
       result.type = [CardType.SKIP, CardType.DRAW, CardType.REVERSE][typeIndex];
