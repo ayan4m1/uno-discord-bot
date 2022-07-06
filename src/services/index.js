@@ -133,8 +133,8 @@ export default {
 
     await stopGame(gameId);
     await setWinner(gameId, winnerId);
-    for (const { id, username } of players) {
-      await createScore(gameId, { id, username }, scoreHand(hands[id]));
+    for (const { id } of players) {
+      await createScore(gameId, { id }, scoreHand(hands[id]));
     }
   },
   stopGame: ({ gameId }) => stopGame(gameId)
