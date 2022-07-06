@@ -5,10 +5,12 @@ import {
   CardColor,
   CardType,
   createContext,
+  scoreHand,
   DrawSize,
   HandSize,
   WildDrawSize
 } from '../modules/deck.js';
+import { createScore } from '../modules/database.js';
 
 export default {
   /**
@@ -67,19 +69,23 @@ export default {
   /**
    * Remove an existing player from an active game
    */
-  removePlayerMidgame: assign(({ discardPile, players, hands }, { id }) => {
-    const newDiscard = [...discardPile];
-    const newHands = { ...hands };
+  removePlayerMidgame: assign(
+    ({ gameId, discardPile, players, hands }, { id }) => {
+      const newDiscard = [...discardPile];
+      const newHands = { ...hands };
 
-    newDiscard.push.apply(newDiscard, newHands[id]);
-    delete newHands[id];
+      newDiscard.push.apply(newDiscard, newHands[id]);
+      delete newHands[id];
 
-    return {
-      discardPile: newDiscard,
-      hands: newHands,
-      players: players.filter((player) => player.id !== id)
-    };
-  }),
+      createScore(gameId, { id }, scoreHand(hands[id]));
+
+      return {
+        discardPile: newDiscard,
+        hands: newHands,
+        players: players.filter((player) => player.id !== id)
+      };
+    }
+  ),
   /**
    * Deal out hands and set up discardPile
    */
