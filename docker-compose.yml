@@ -1,0 +1,20 @@
+services:
+  bot:
+    image: uno-discord-bot
+    build: ./
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    environment:
+      - UNO_LOG_LEVEL
+      - UNO_LOG_TIME_FMT
+      - UNO_DISCORD_BOT_TOKEN
+      - UNO_DISCORD_CLIENT_ID
+      - UNO_DISCORD_GUILD_ID
+      - UNO_DISCORD_CHANNEL_ID
+      - UNO_DISCORD_ADMIN_ROLE_IDS
+      - UNO_GAME_DEBUG_MODE
+      - UNO_GAME_SOLICIT_DELAY
+      - UNO_GAME_ROUND_DELAY
+      - UNO_GAME_CARD_BASE_URL
+      - UNO_DB_URL
+      - UNO_HELP_IMAGE_URL
