@@ -1,4 +1,4 @@
-import { MessageEmbed, MessageAttachment } from 'discord.js';
+import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
 import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 import { send, actions } from 'xstate';
@@ -25,7 +25,7 @@ export default {
   notifySolicit: (_, { interaction }) =>
     replyEmbed(
       interaction,
-      new MessageEmbed({
+      new EmbedBuilder({
         title: 'Join Uno!',
         description: `Use \`/join\` to join the game!
 
@@ -34,13 +34,13 @@ export default {
     ),
   notifyGameStart: ({ players }) =>
     sendEmbed(
-      new MessageEmbed({
+      new EmbedBuilder({
         title: 'Game starting!',
         description: `Dealing cards to ${players.length} players...`
       })
     ),
   notifyGameStop: (_, { interaction }) => {
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: 'Game stopped!',
       description: 'The game was stopped.'
     });
@@ -54,7 +54,7 @@ export default {
     replyEmbed(
       interaction,
       players.length
-        ? new MessageEmbed({
+        ? new EmbedBuilder({
             title: `Game with ${players.length} players`,
             image: {
               url: discardPile.length
@@ -72,12 +72,12 @@ export default {
             })),
             footer: `Active Player: ${activePlayer.username}`
           })
-        : new MessageEmbed({ description: 'Not playing a game!' })
+        : new EmbedBuilder({ description: 'Not playing a game!' })
     ),
   notifyAddPlayer: (_, { username, interaction }) =>
     replyEmbed(
       interaction,
-      new MessageEmbed({
+      new EmbedBuilder({
         title: 'Player joined!',
         description: `${username} has joined the game!`
       })
@@ -85,7 +85,7 @@ export default {
   notifyRemovePlayer: (_, { username, interaction }) =>
     replyEmbed(
       interaction,
-      new MessageEmbed({
+      new EmbedBuilder({
         title: 'Player left!',
         description: `${username} has left the game!`
       })
@@ -149,7 +149,7 @@ export default {
 
     const { height, width, buffer } = await createCardMontage(hand);
 
-    const embed = new MessageEmbed({
+    const embed = new EmbedBuilder({
       title: 'Your Hand',
       description: hand.map((card) => card.toString()).join(', '),
       image: {
@@ -158,7 +158,7 @@ export default {
         width
       }
     });
-    const attachments = [new MessageAttachment(buffer, 'hand.png')];
+    const attachments = [new AttachmentBuilder(buffer, 'hand.png')];
 
     if (interaction) {
       return replyEmbed(interaction, embed, attachments);
@@ -184,7 +184,7 @@ export default {
 
     return replyEmbed(
       interaction,
-      new MessageEmbed({
+      new EmbedBuilder({
         title: 'Leaderboard',
         fields: fields.slice(0, Math.min(10, fields.length))
       })
@@ -193,7 +193,7 @@ export default {
   notifyHelp: (_, { interaction }) =>
     replyEmbed(
       interaction,
-      new MessageEmbed({
+      new EmbedBuilder({
         title: 'Help!',
         description: `To play Uno, an admin starts the game with \`/start\`. Then, players join with \`/join\`. Admins can cancel a game in-progress with \`/stop\`.
 

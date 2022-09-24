@@ -1,4 +1,10 @@
-import { Client, Collection, Intents } from 'discord.js';
+import {
+  REST,
+  Routes,
+  Client,
+  Collection,
+  GatewayIntentBits
+} from 'discord.js';
 import { readdirSync } from 'fs';
 
 import { discord as config } from './config.js';
@@ -7,12 +13,13 @@ import { getLogger } from './logging.js';
 
 export const client = new Client({
   intents: [
-    Intents.FLAGS.GUILD_MEMBERS,
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.DIRECT_MESSAGES
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.DirectMessages
   ]
 });
+const rest = new REST({ version: '9' }).setToken(config.botToken);
 const log = getLogger('discord');
 const commandDir = './src/commands';
 
@@ -26,12 +33,30 @@ export const loadCommands = async () =>
 export const registerCommands = async () => {
   client.commands = new Collection();
 
+  const commandData = [];
   const commands = await loadCommands();
 
   for (const command of commands) {
     log.info(`Registered command ${command.data.name}`);
 
     client.commands.set(command.data.name, command);
+    commandData.push(command.data.toJSON());
+  }
+
+  try {
+    log.info('Syncing slash commands...');
+
+    await rest.put(
+      Routes.applicationGuildCommands(config.clientId, config.guildId),
+      {
+        body: commandData
+      }
+    );
+
+    log.info('Synced slash commands!');
+  } catch (error) {
+    log.error(error.message);
+    log.error(error.stack);
   }
 };
 

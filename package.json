@@ -10,31 +10,29 @@
     "lint": "eslint ./src/**.js"
   },
   "dependencies": {
-    "@discordjs/builders": "^0.15.0",
-    "@discordjs/rest": "^0.5.0",
-    "@prisma/client": "^3.15.1",
+    "@prisma/client": "^4.3.1",
     "bufferutil": "^4.0.6",
-    "canvas": "^2.9.1",
-    "discord.js": "^13.8.0",
-    "dotenv": "^16.0.1",
+    "canvas": "^2.10.1",
+    "discord.js": "^14.4.0",
+    "dotenv": "^16.0.2",
     "jsonfile": "^6.1.0",
     "lodash-es": "^4.17.21",
     "pluralize": "^8.0.0",
     "utf-8-validate": "^5.0.9",
-    "winston": "^3.7.2",
-    "xstate": "^4.32.1",
+    "winston": "^3.8.2",
+    "xstate": "^4.33.6",
     "zlib-sync": "^0.1.7"
   },
   "devDependencies": {
-    "@babel/eslint-parser": "^7.18.2",
-    "eslint": "^8.17.0",
+    "@babel/eslint-parser": "^7.19.1",
+    "eslint": "^8.24.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-import-resolver-node": "^0.3.6",
     "eslint-plugin-import": "^2.26.0",
-    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "husky": "^8.0.1",
-    "lint-staged": "^13.0.1",
-    "prettier": "^2.7.0",
-    "prisma": "^3.15.1"
+    "lint-staged": "^13.0.3",
+    "prettier": "^2.7.1",
+    "prisma": "^4.3.1"
   }
 }

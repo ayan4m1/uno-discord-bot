@@ -1,4 +1,4 @@
-import { MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
 import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 
@@ -47,7 +47,7 @@ export default {
       ...handsArray.slice(0, activePlayerIndex)
     ];
 
-    let embed = new MessageEmbed({
+    let embed = new EmbedBuilder({
       title: `${activePlayer.username}'s turn!`,
       description: `You have ${
         config.roundDelay / 1e3
@@ -84,7 +84,7 @@ export default {
 
     return replyEmbed(
       interaction,
-      new MessageEmbed({
+      new EmbedBuilder({
         title: `${activePlayer.username} played ${card.toString()}!`,
         color: hexColor
       })
@@ -103,7 +103,7 @@ export default {
     ),
   notifyUno: ({ activePlayer }) =>
     sendEmbed(
-      new MessageEmbed({
+      new EmbedBuilder({
         title: `${activePlayer.username} has UNO!`,
         description: `Watch out for ${activePlayer.username}!`
       })
@@ -115,7 +115,7 @@ export default {
     const winner = players.find((player) => player.id === winnerId);
 
     return sendEmbed(
-      new MessageEmbed({
+      new EmbedBuilder({
         title: 'Game Over!',
         description: `:tada: ${winner.username} is the winner! :tada:`
       })
