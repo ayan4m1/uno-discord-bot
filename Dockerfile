@@ -1,4 +1,4 @@
-FROM node:16-alpine
+FROM node:lts-alpine
 
 RUN apk add python3 alpine-sdk \
     pixman-dev cairo-dev pango-dev
