@@ -3,7 +3,8 @@ import {
   Routes,
   Client,
   Collection,
-  GatewayIntentBits
+  GatewayIntentBits,
+  Events
 } from 'discord.js';
 import { readdirSync } from 'fs';
 
@@ -60,7 +61,7 @@ export const registerCommands = async () => {
   }
 };
 
-client.on('interactionCreate', async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isCommand()) {
     return;
   }
@@ -162,7 +163,7 @@ export const sendPrivateEmbed = async (userId, embed, files = []) => {
   return channel.send({ embeds: [embed], files });
 };
 
-client.on('ready', async () => {
+client.on(Events.ClientReady, async () => {
   const guilds = [...client.guilds.cache.values()];
 
   log.info(`Bot is connected to Discord, tracking ${guilds.length} servers!`);
