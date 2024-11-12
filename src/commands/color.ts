@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
 
 import { createInteractionHandler } from '../modules/discord.js';
 import { getCardColor } from '../modules/deck.js';
@@ -18,15 +18,17 @@ export const data = new SlashCommandBuilder()
       )
   );
 
-export const handler = createInteractionHandler((interaction) => {
-  const {
-    user: { id },
-    options
-  } = interaction;
+export const handler = createInteractionHandler(
+  (interaction: ChatInputCommandInteraction) => {
+    const {
+      user: { id },
+      options
+    } = interaction;
 
-  return {
-    type: 'PLAYER_CHANGE_COLOR',
-    id,
-    color: getCardColor(options.getString('color', true))
-  };
-});
+    return {
+      type: 'PLAYER_CHANGE_COLOR',
+      id,
+      color: getCardColor(options.getString('color', true))
+    };
+  }
+);

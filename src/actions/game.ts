@@ -1,5 +1,5 @@
 import { send, assign } from 'xstate';
-import { sample, reverse, last, shuffle } from 'lodash-es';
+import { sample, reverse, last, shuffle } from 'lodash';
 
 import {
   CardColor,

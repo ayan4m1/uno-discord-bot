@@ -1,7 +1,7 @@
 import { basename } from 'path';
-import canvas from 'canvas';
+import { createCanvas, loadImage } from 'canvas';
+import { Card } from './deck.js';
 
-const { createCanvas, loadImage } = canvas;
 const maxColumns = 10;
 const cardWidth = 64;
 const cardHeight = 93;
@@ -9,9 +9,11 @@ const cardPadding = 4;
 const paddedWidth = cardWidth + cardPadding * 2;
 const paddedHeight = cardHeight + cardPadding * 2;
 
-export const createCardMontage = async (cards) => {
+export const createCardMontage = async (cards: Card[]) => {
   const images = await Promise.all(
-    cards.map((card) => loadImage(`./src/assets/${basename(card.toUrl('M'))}`))
+    cards.map((card: Card) =>
+      loadImage(`./src/assets/${basename(card.toUrl('M'))}`)
+    )
   );
 
   const width = Math.min(maxColumns, images.length) * paddedWidth;
@@ -37,7 +39,7 @@ export const createCardMontage = async (cards) => {
   }
 
   return new Promise((resolve, reject) => {
-    const buffers = [];
+    const buffers: Uint8Array[] = [];
     const stream = img.createPNGStream();
 
     stream.on('error', reject);

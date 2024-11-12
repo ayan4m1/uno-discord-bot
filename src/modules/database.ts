@@ -110,7 +110,7 @@ export const getLeaderboard = async () => {
       for (const playedGame of player.playedGames.filter(
         ({ game }) => game.stopped !== null
       )) {
-        score += playedGame.score;
+        score += playedGame.score ?? 0;
         games++;
         if (playedGame.game.winnerId === player.id) {
           won++;
