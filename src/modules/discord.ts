@@ -9,12 +9,15 @@ import {
   ChatInputCommandInteraction,
   RESTPostAPIChatInputApplicationCommandsJSONBody,
   TextChannel,
-  DMChannel
+  DMChannel,
+  EmbedBuilder,
+  AttachmentBuilder,
+  GuildMember
 } from 'discord.js';
 import { readdirSync } from 'fs';
 
 import { discord as config } from './config.js';
-import { service } from './game.js';
+import { GameEvent, service } from './game.js';
 import { getLogger } from './logging.js';
 
 if (!config.botToken) {
@@ -73,8 +76,10 @@ export const registerCommands = async () => {
 
     log.info('Synced slash commands!');
   } catch (error) {
-    log.error(error.message);
-    log.error(error.stack);
+    if (error instanceof Error) {
+      log.error(error.message);
+      log.error(error.stack);
+    }
   }
 };
 
@@ -96,8 +101,10 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
     await command.handler(interaction as ChatInputCommandInteraction);
   } catch (error) {
-    log.error(error.message);
-    log.error(error.stack);
+    if (error instanceof Error) {
+      log.error(error.message);
+      log.error(error.stack);
+    }
 
     const message = {
       content: 'There was an error executing this command!',
@@ -124,7 +131,7 @@ export const disconnectBot = () => {
   client.destroy();
 };
 
-export const isAdmin = (member) =>
+export const isAdmin = (member: GuildMember) =>
   config.adminRoleIds.some((role) => member.roles.cache.has(role));
 
 const getNotificationChannel = () => {
@@ -137,7 +144,7 @@ const getNotificationChannel = () => {
   return guild?.channels?.cache?.find?.((chan) => chan.id === config.channelId);
 };
 
-const getPrivateMessageChannel = async (userId) => {
+const getPrivateMessageChannel = async (userId: string) => {
   if (!config.guildId) {
     throw new Error('Invalid Discord guild ID!');
   }
@@ -153,38 +160,49 @@ const getPrivateMessageChannel = async (userId) => {
   return member.user.dmChannel || member.user.createDM();
 };
 
-export const replyMessage = (interaction, message) =>
-  interaction.followUp({ content: message });
+export const replyMessage = (
+  interaction?: ChatInputCommandInteraction,
+  message?: string
+) => interaction?.followUp?.({ content: message });
 
-export const replyEmbed = (interaction, embed, files = []) =>
-  interaction.followUp({ embeds: [embed], files });
+export const replyEmbed = (
+  interaction?: ChatInputCommandInteraction,
+  embed: EmbedBuilder = new EmbedBuilder(),
+  files: AttachmentBuilder[] = []
+) => interaction?.followUp?.({ embeds: [embed], files });
 
-export const sendEmbed = (embed) => {
+export const sendEmbed = (embed: EmbedBuilder) => {
   const channel = getNotificationChannel();
   const textChannel = channel as TextChannel;
 
   return textChannel?.send({ embeds: [embed] });
 };
 
-export const createInteractionHandler = (handler) => async (interaction) => {
-  const event = handler(interaction);
+export const createInteractionHandler =
+  (handler: (interaction: ChatInputCommandInteraction) => GameEvent | null) =>
+  async (interaction: ChatInputCommandInteraction) => {
+    const event = handler(interaction);
 
-  if (!event) {
-    return;
-  }
+    if (!event) {
+      return;
+    }
 
-  await interaction.deferReply({ ephemeral: event.ephemeral });
-  service.send({ ...event, interaction });
-};
+    await interaction.deferReply({ ephemeral: event.ephemeral });
+    service.send({ ...event, interaction });
+  };
 
-export const sendMessage = (message) => {
+export const sendMessage = (message: string) => {
   const channel = getNotificationChannel();
   const textChannel = channel as TextChannel;
 
   return textChannel?.send({ content: message });
 };
 
-export const sendPrivateEmbed = async (userId, embed, files = []) => {
+export const sendPrivateEmbed = async (
+  userId: string,
+  embed: EmbedBuilder,
+  files: AttachmentBuilder[] = []
+) => {
   const channel = await getPrivateMessageChannel(userId);
   const textChannel = channel as DMChannel;
 

@@ -15,6 +15,7 @@ import {
 } from '../modules/discord.js';
 import { getLeaderboard } from '../modules/database.js';
 import { createCardMontage } from '../modules/montage.js';
+import { GameContext, GameEvent } from '../modules/game.js';
 
 const { pure } = actions;
 const { readFileSync } = jsonfile;
@@ -22,7 +23,7 @@ const { readFileSync } = jsonfile;
 const packageJson = readFileSync(resolve('.', 'package.json'));
 
 export default {
-  notifySolicit: (_, { interaction }) =>
+  notifySolicit: (_, { interaction }: GameEvent) =>
     replyEmbed(
       interaction,
       new EmbedBuilder({
@@ -32,14 +33,14 @@ export default {
         Starting in ${config.solicitDelay / 1e3} seconds...`
       })
     ),
-  notifyGameStart: ({ players }) =>
+  notifyGameStart: ({ players }: GameContext) =>
     sendEmbed(
       new EmbedBuilder({
         title: 'Game starting!',
         description: `Dealing cards to ${players.length} players...`
       })
     ),
-  notifyGameStop: (_, { interaction }) => {
+  notifyGameStop: (_, { interaction }: GameEvent) => {
     const embed = new EmbedBuilder({
       title: 'Game stopped!',
       description: 'The game was stopped.'
@@ -48,8 +49,8 @@ export default {
     return interaction ? replyEmbed(interaction, embed) : sendEmbed(embed);
   },
   notifyGameStatus: (
-    { activePlayer, players, hands, discardPile, deck },
-    { interaction }
+    { activePlayer, players, hands, discardPile, deck }: GameContext,
+    { interaction }: GameEvent
   ) =>
     replyEmbed(
       interaction,
@@ -59,7 +60,7 @@ export default {
             image: {
               url: discardPile.length
                 ? discardPile[discardPile.length - 1].toUrl('M')
-                : null
+                : ''
             },
             description: `Discard Pile: ${discardPile.length} ${pluralize(
               'cards',
@@ -67,14 +68,18 @@ export default {
             )}
             Deck: ${deck.length} ${pluralize('cards', deck.length)}`,
             fields: Object.entries(hands).map(([id, hand]) => ({
-              name: players.find((player) => player.id === id).username,
+              name:
+                players?.find?.((player) => player.id === id)?.username ??
+                'Unknown',
               value: `${hand.length} ${pluralize('cards', hand.length)}`
             })),
-            footer: `Active Player: ${activePlayer.username}`
+            footer: {
+              text: `Active Player: ${activePlayer?.username}`
+            }
           })
         : new EmbedBuilder({ description: 'Not playing a game!' })
     ),
-  notifyAddPlayer: (_, { username, interaction }) =>
+  notifyAddPlayer: (_, { username, interaction }: GameEvent) =>
     replyEmbed(
       interaction,
       new EmbedBuilder({
@@ -82,7 +87,7 @@ export default {
         description: `${username} has joined the game!`
       })
     ),
-  notifyRemovePlayer: (_, { username, interaction }) =>
+  notifyRemovePlayer: (_, { username, interaction }: GameEvent) =>
     replyEmbed(
       interaction,
       new EmbedBuilder({
@@ -90,51 +95,54 @@ export default {
         description: `${username} has left the game!`
       })
     ),
-  notifyInGame: (_, { interaction }) =>
+  notifyInGame: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You are already in the game!'),
-  notifyNotInGame: (_, { interaction }) =>
+  notifyNotInGame: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You are not in the game!'),
-  notifyInvalidAdd: (_, { interaction }) =>
+  notifyInvalidAdd: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, 'Sorry, you cannot join now!'),
-  notifyInvalidRemove: (_, { interaction }) =>
+  notifyInvalidRemove: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, 'Sorry, you cannot leave now!'),
-  notifyInvalidPlayer: (_, { interaction }) =>
+  notifyInvalidPlayer: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, "It's not your turn!"),
-  notifyInvalidPass: (_, { interaction }) =>
+  notifyInvalidPass: (_, { interaction }: GameEvent) =>
     replyMessage(
       interaction,
       'You shall not pass (without first drawing a card)!'
     ),
-  notifyInvalidPlay: (_, { interaction }) =>
+  notifyInvalidPlay: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You cannot play now!'),
-  notifyInvalidDraw: (_, { interaction }) =>
+  notifyInvalidDraw: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You cannot draw now!'),
-  notifyInvalidColorChange: (_, { interaction }) =>
+  notifyInvalidColorChange: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You cannot change colors right now!'),
-  notifyDuplicateDraw: (_, { interaction }) =>
+  notifyDuplicateDraw: (_, { interaction }: GameEvent) =>
     replyMessage(
       interaction,
       'You have already drawn a card! Use `/play` or `/pass`!'
     ),
-  notifyMissingCard: (_, { interaction }) =>
+  notifyMissingCard: (_, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You cannot play that card!'),
-  notifyInvalidCard: ({ discardPile }, { card, interaction }) =>
+  notifyInvalidCard: (
+    { discardPile }: GameContext,
+    { card, interaction }: GameEvent
+  ) =>
     replyMessage(
       interaction,
-      `You cannot play ${card.toString()} on ${last(discardPile).toString()}!`
+      `You cannot play ${card?.toString()} on ${last(discardPile).toString()}!`
     ),
-  notifyInvalidColor: (_, { color, interaction }) =>
+  notifyInvalidColor: (_, { color, interaction }: GameEvent) =>
     replyMessage(interaction, `${color} is not a valid color (R, G, B, or Y)`),
-  notifyDraw: ({ activePlayer }, { interaction }) =>
-    replyMessage(interaction, `${activePlayer.username} drew a card!`),
+  notifyDraw: ({ activePlayer }: GameContext, { interaction }: GameEvent) =>
+    replyMessage(interaction, `${activePlayer?.username} drew a card!`),
   notifyAllHands: pure(({ players }) =>
     players
       .slice(1)
       .map((player) => send({ type: 'HAND_REQUEST', id: player.id }))
   ),
-  notifyActivePlayerHand: send(({ activePlayer }) => ({
+  notifyActivePlayerHand: send(({ activePlayer }: GameContext) => ({
     type: 'HAND_REQUEST',
-    id: activePlayer.id
+    id: activePlayer?.id
   })),
   notifyInactiveGame: (_, { interaction }) =>
     replyMessage(interaction, 'No game is active!'),
@@ -158,7 +166,7 @@ export default {
         width
       }
     });
-    const attachments = [new AttachmentBuilder(buffer, 'hand.png')];
+    const attachments = [new AttachmentBuilder(buffer).setName('hand.png')];
 
     if (interaction) {
       return replyEmbed(interaction, embed, attachments);

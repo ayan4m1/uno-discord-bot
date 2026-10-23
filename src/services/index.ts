@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, User } from 'discord.js';
 import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 
@@ -21,12 +21,19 @@ import {
   getCardColor,
   scoreHand
 } from '../modules/deck.js';
+import { GameContext, GameEvent } from '../modules/game.js';
 
 export default {
-  notifyRoundStart: ({ hands, players, color, discardPile, activePlayer }) => {
+  notifyRoundStart: ({
+    hands,
+    players,
+    color,
+    discardPile,
+    activePlayer
+  }: GameContext) => {
     const discard = last(discardPile);
 
-    let hexColor;
+    let hexColor: number | undefined;
 
     if (color && !discard.color) {
       hexColor = hexColors[color];
@@ -34,7 +41,7 @@ export default {
       hexColor = hexColors[discard.color];
     }
 
-    const activePlayerIndex = players.indexOf(activePlayer);
+    const activePlayerIndex = activePlayer ? players.indexOf(activePlayer) : -1;
 
     if (activePlayerIndex === -1) {
       return sendMessage('Error determining who the active player is!');
@@ -48,12 +55,13 @@ export default {
     ];
 
     let embed = new EmbedBuilder({
-      title: `${activePlayer.username}'s turn!`,
+      title: `${activePlayer?.username}'s turn!`,
       description: `You have ${
         config.roundDelay / 1e3
       } seconds to \`/play\` or \`/draw\`.`,
       fields: handsArray.map(([id, hand]) => ({
-        name: players.find((player) => player.id === id).username,
+        name:
+          players?.find((player) => player.id === id)?.username ?? 'Unknown',
         value: `${hand.length} ${pluralize('cards', hand.length)}`
       })),
       color: hexColor,
@@ -73,10 +81,13 @@ export default {
 
     return sendEmbed(embed);
   },
-  notifyPlay: ({ activePlayer, discardPile }, { interaction }) => {
+  notifyPlay: (
+    { activePlayer, discardPile }: GameContext,
+    { interaction }: GameEvent
+  ) => {
     const card = last(discardPile);
 
-    let hexColor;
+    let hexColor: number | undefined;
 
     if (card.color) {
       hexColor = hexColors[card.color];
@@ -85,51 +96,54 @@ export default {
     return replyEmbed(
       interaction,
       new EmbedBuilder({
-        title: `${activePlayer.username} played ${card.toString()}!`,
+        title: `${activePlayer?.username} played ${card.toString()}!`,
         color: hexColor
       })
     );
   },
   notifyNoPlayers: () =>
     sendMessage('Cancelled the game because there were not enough players!'),
-  notifyColorChange: ({ color, activePlayer }, { interaction }) =>
+  notifyColorChange: (
+    { color, activePlayer }: GameContext,
+    { interaction }: GameEvent
+  ) =>
     replyMessage(
       interaction,
-      `${activePlayer.username} chose ${getCardColor(color)}!`
+      `${activePlayer?.username} chose ${getCardColor(color)}!`
     ),
-  notifyColorChangeNeeded: ({ activePlayer }) =>
+  notifyColorChangeNeeded: ({ activePlayer }: GameContext) =>
     sendMessage(
-      `${activePlayer.username} must select a new color! Use e.g. \`/color Red\``
+      `${activePlayer?.username} must select a new color! Use e.g. \`/color Red\``
     ),
-  notifyUno: ({ activePlayer }) =>
+  notifyUno: ({ activePlayer }: GameContext) =>
     sendEmbed(
       new EmbedBuilder({
-        title: `${activePlayer.username} has UNO!`,
-        description: `Watch out for ${activePlayer.username}!`
+        title: `${activePlayer?.username} has UNO!`,
+        description: `Watch out for ${activePlayer?.username}!`
       })
     ),
-  notifyWinner: ({ players, hands }) => {
+  notifyWinner: ({ players, hands }: GameContext) => {
     const [winnerId] = Object.entries(hands).find(
       ([, hand]) => hand.length === 0
-    );
-    const winner = players.find((player) => player.id === winnerId);
+    ) ?? [''];
+    const winner = players.find((player: User) => player.id === winnerId);
 
     return sendEmbed(
       new EmbedBuilder({
         title: 'Game Over!',
-        description: `:tada: ${winner.username} is the winner! :tada:`
+        description: `:tada: ${winner?.username} is the winner! :tada:`
       })
     );
   },
-  notifyPass: ({ activePlayer }, { interaction }) =>
-    replyMessage(interaction, `${activePlayer.username} passed!`),
-  notifySkip: ({ activePlayer }) =>
-    sendMessage(`Skipping ${activePlayer.username}`),
-  createGame: ({ players }) => startGame(players),
-  updateScores: async ({ gameId, hands, players }) => {
+  notifyPass: ({ activePlayer }: GameContext, { interaction }: GameEvent) =>
+    replyMessage(interaction, `${activePlayer?.username} passed!`),
+  notifySkip: ({ activePlayer }: GameContext) =>
+    sendMessage(`Skipping ${activePlayer?.username}`),
+  createGame: ({ players }: GameContext) => startGame(players),
+  updateScores: async ({ gameId, hands, players }: GameContext) => {
     const [winnerId] = Object.entries(hands).find(
       ([, hand]) => hand.length === 0
-    );
+    ) ?? [''];
 
     await stopGame(gameId);
     await setWinner(gameId, winnerId);
@@ -137,5 +151,5 @@ export default {
       await createScore(gameId, { id }, scoreHand(hands[id]));
     }
   },
-  stopGame: ({ gameId }) => stopGame(gameId)
+  stopGame: ({ gameId }: GameContext) => stopGame(gameId)
 };

@@ -1,33 +1,34 @@
 import { uno as config } from './config.js';
+import { GameContext } from './game.js';
 
 export const HandSize = 7;
 export const WildDrawSize = 4;
 export const DrawSize = 2;
 
-export const CardType = {
-  NUMBER: 'number',
-  WILD: 'wild',
-  WILD_DRAW: 'wildDraw',
-  SKIP: 'skip',
-  DRAW: 'draw',
-  REVERSE: 'reverse'
-};
+export enum CardType {
+  NUMBER = 'number',
+  WILD = 'wild',
+  WILD_DRAW = 'wildDraw',
+  SKIP = 'skip',
+  DRAW = 'draw',
+  REVERSE = 'reverse'
+}
 
-export const CardColor = {
-  RED: 'Red',
-  YELLOW: 'Yellow',
-  GREEN: 'Green',
-  BLUE: 'Blue'
-};
+export enum CardColor {
+  RED = 'Red',
+  YELLOW = 'Yellow',
+  GREEN = 'Green',
+  BLUE = 'Blue'
+}
 
 export const hexColors = {
-  [CardColor.RED]: '#ff0000',
-  [CardColor.BLUE]: '#0000ff',
-  [CardColor.GREEN]: '#00ff00',
-  [CardColor.YELLOW]: '#ffff00'
+  [CardColor.RED]: 0xff0000,
+  [CardColor.BLUE]: 0x0000ff,
+  [CardColor.GREEN]: 0x00ff00,
+  [CardColor.YELLOW]: 0xffff00
 };
 
-export const getCardColor = (str) =>
+export const getCardColor = (str: string) =>
   Object.values(CardColor).find(
     (val) => val?.toUpperCase?.()[0] === str?.trim?.()?.toUpperCase?.()[0]
   );
@@ -36,16 +37,16 @@ export const getCardColor = (str) =>
  * Represents an individual game card.
  */
 export class Card {
-  value = null;
-  color = null;
-  type = null;
+  value?: number;
+  color?: CardColor;
+  type?: CardType;
 
   /**
    * Constructs a card given a string identifier (e.g. "YS" or "G1").
-   * @param {*} source Card string
+   * @param {string} source Card string
    * @returns {Card|null} Card instance, or null if an invalid string was supplied
    */
-  static fromString(source) {
+  static fromString(source: string): Card | null {
     const result = new Card();
     const tokens = source.trim().toUpperCase().split('');
 
@@ -87,10 +88,10 @@ export class Card {
   /**
    * Constructs a card given an index between 0 and 107.
    *
-   * @param {*} index Index in the deck
+   * @param {number} index Index in the deck
    * @returns {Card|null} Card instance, or null if an invalid index was supplied
    */
-  static fromIndex(index = 0) {
+  static fromIndex(index: number = 0): Card | null {
     const result = new Card();
 
     // four wild draw, four wild
@@ -168,20 +169,21 @@ export class Card {
    * Returns a shorthand string representation of the card.
    * @returns {string} describing the card
    */
-  toString() {
+  toString(): string {
     return `${this.colorCode}${this.cardCode}`;
   }
 
   /**
    * Compares one card to another, for sorting.
-   * @param {*} other The other card
-   * @returns 0 if cards are equal, -1 or 1 otherwise depending on their relative order
+   * @param {Card} other The other card
+   * @returns {number} 0 if cards are equal, -1 or 1 otherwise depending on their relative order
    */
-  compareTo(other) {
+  compareTo(other: Card): number {
     if (this.equals(other)) {
       return 0;
     } else {
-      return this.color?.toUpperCase?.() > other?.color?.toUpperCase?.()
+      return (this.color?.toUpperCase?.() ?? '') >
+        (other?.color?.toUpperCase?.() ?? '')
         ? 1
         : -1;
     }
@@ -192,7 +194,7 @@ export class Card {
    * @param {Card} other The card to compare to
    * @returns {boolean} True if the card is the same, false otherwise
    */
-  equals(other) {
+  equals(other?: Card): boolean {
     return (
       this.type === other?.type &&
       this.color === other?.color &&
@@ -205,7 +207,7 @@ export class Card {
    * @param {Card} other The card to compare to
    * @returns {boolean} True if the card can be played, false otherwise
    */
-  validPlay(other) {
+  validPlay(other: Card): boolean {
     if (!other.type) {
       return false;
     }
@@ -226,26 +228,30 @@ export class Card {
  * Create a complete game deck.
  * @returns {Array<Card>} Array of Card objects
  */
-export const createDeck = () =>
+export const createDeck = (): Array<Card> =>
   Array(108)
     .fill(undefined)
-    .map((_, index) => Card.fromIndex(index));
+    .flatMap((_, index) => {
+      const card = Card.fromIndex(index);
 
-export const createContext = () => ({
+      if (card) {
+        return [card];
+      } else {
+        return [];
+      }
+    });
+
+export const createContext = (): GameContext => ({
   deck: createDeck(),
-  color: null,
   discardPile: [],
   hands: {},
-  players: [],
-  activePlayer: null,
-  lastDrawPlayer: null,
-  gameId: null
+  players: []
 });
 
-const scoreCard = (card) => {
+const scoreCard = (card: Card) => {
   switch (card.type) {
     case CardType.NUMBER:
-      return card.value;
+      return card.value ?? 0;
     case CardType.DRAW:
     case CardType.SKIP:
     case CardType.REVERSE:
@@ -258,5 +264,5 @@ const scoreCard = (card) => {
   }
 };
 
-export const scoreHand = (hand) =>
+export const scoreHand = (hand: Card[]) =>
   hand.reduce((score, card) => score + scoreCard(card), 0);

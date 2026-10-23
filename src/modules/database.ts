@@ -24,7 +24,9 @@ export const mergeUser = async (user) => {
       });
     }
   } catch (error) {
+    if (error instanceof Error) {
     log.error(error.message);
+    }
   }
 };
 
@@ -60,7 +62,9 @@ export const stopGame = async (id) => {
       }
     });
   } catch (error) {
+    if (error instanceof Error) {
     log.error(error.message);
+    }
   }
 };
 
@@ -94,13 +98,23 @@ export const createScore = async (gameId, user, score) => {
   }
 };
 
-export const getLeaderboard = async () => {
+export type LeaderboardEntry = {
+  score: number;
+  games: number;
+  won: number;
+  ratio: number;
+};
+
+export const getLeaderboard = async (): Promise<
+  Map<string, LeaderboardEntry>
+> => {
+  const scores = new Map<string, LeaderboardEntry>();
+
   try {
     const players = await prisma.user.findMany({
       take: 100,
       include: { playedGames: { include: { game: true } } }
     });
-    const scores = {};
 
     for (const player of players) {
       let score = 0,
@@ -118,19 +132,17 @@ export const getLeaderboard = async () => {
       }
 
       if (games > 0) {
-        scores[player.username] = {
+        scores.set(player.username, {
           score,
           games,
           won,
           ratio: score / games
-        };
+        });
       }
     }
-
-    return scores;
   } catch (error) {
     log.error(error.message);
   }
 
-  return null;
+  return scores;
 };

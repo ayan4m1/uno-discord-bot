@@ -3,10 +3,10 @@ import { SlashCommandBuilder } from 'discord.js';
 import { createInteractionHandler } from '../modules/discord.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('help')
-  .setDescription('Messages you command/gameplay help');
+  .setName('status')
+  .setDescription('Shows the current game status');
 
 export const handler = createInteractionHandler(() => ({
-  type: 'HELP_REQUEST',
-  ephemeral: true
+  id: 'gameStatus',
+  type: 'GAME_STATUS'
 }));

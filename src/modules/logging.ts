@@ -1,39 +1,41 @@
-import { Container, format, transports } from 'winston';
+import { Container, type Logger, format, transports } from 'winston';
 
-import { logging as config } from './config.js';
+const { Console } = transports;
+const { combine, label, printf } = format;
 
-const { combine, label, prettyPrint, printf, timestamp } = format;
-
-const loggers = {};
+// winston's Container is already a cache keyed by category - add() registers
+// a logger and get() returns whatever is registered
 const container = new Container();
 
-const createLogger = (category: string, categoryLabel) => {
-  let formatter = (data) => `[${data.level}][${data.label}] ${data.message}`;
-  const formatters = [label({ label: categoryLabel })];
+// loggers are created as modules load, before configuration has been read, so
+// they start at this level and setLogLevel() adjusts them afterwards
+let level = 'info';
 
-  if (config.timestampFormat) {
-    formatters.push(timestamp({ format: config.timestampFormat }));
-    formatter = (data) =>
-      `${data.timestamp} [${data.level}][${data.label}] ${data.message}`;
+export const getLogger = (category: string): Logger => {
+  if (!container.has(category)) {
+    container.add(category, {
+      level,
+      transports: [
+        new Console({
+          format: combine(
+            label({
+              label: category
+            }),
+            printf((data) => `[${data.level}][${data.label}] ${data.message}`)
+          )
+        })
+      ]
+    });
   }
-
-  formatters.push(prettyPrint(), printf(formatter));
-  container.add(category, {
-    transports: [
-      new transports.Console({
-        level: config.level,
-        format: combine(...formatters)
-      })
-    ]
-  });
 
   return container.get(category);
 };
 
-export const getLogger = (category: string, categoryLabel = category) => {
-  if (!loggers[category]) {
-    loggers[category] = createLogger(category, categoryLabel);
-  }
+/** Applies `next` to every logger, both existing and yet to be created. */
+export const setLogLevel = (next: string): void => {
+  level = next;
 
-  return loggers[category];
+  for (const logger of container.loggers.values()) {
+    logger.level = next;
+  }
 };

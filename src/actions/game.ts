@@ -11,6 +11,7 @@ import {
   WildDrawSize
 } from '../modules/deck.js';
 import { createScore } from '../modules/database.js';
+import { GameContext, GameEvent } from '../modules/game.js';
 
 export default {
   /**
@@ -33,13 +34,17 @@ export default {
    * Shuffle all players
    */
   shufflePlayers: assign({
-    players: ({ players }) => shuffle(players)
+    players: ({ players }: GameContext) => shuffle(players)
   }),
   /**
    * Advance to the next player
    */
   activateNextPlayer: assign({
-    activePlayer: ({ players, activePlayer }) => {
+    activePlayer: ({ players, activePlayer }: GameContext) => {
+      if (!activePlayer) {
+        return;
+      }
+
       const currentIndex = players.indexOf(activePlayer);
 
       return players[
@@ -124,22 +129,27 @@ export default {
   /**
    * Remove a card from the active player's hand and add it to the discard pile
    */
-  playCard: assign(({ discardPile, hands, activePlayer }, { card }) => {
-    const hand = [...hands[activePlayer.id]];
+  playCard: assign(
+    (
+      { discardPile, hands, activePlayer }: GameContext,
+      { card }: GameEvent
+    ) => {
+      const hand = [...hands[activePlayer.id]];
 
-    hand.splice(
-      hand.findIndex((handCard) => handCard.equals(card)),
-      1
-    );
+      hand.splice(
+        hand.findIndex((handCard) => handCard.equals(card)),
+        1
+      );
 
-    return {
-      hands: {
-        ...hands,
-        [activePlayer.id]: hand
-      },
-      discardPile: [...discardPile, card]
-    };
-  }),
+      return {
+        hands: {
+          ...hands,
+          [activePlayer.id]: hand
+        },
+        discardPile: [...discardPile, card]
+      };
+    }
+  ),
   /**
    * Deal a card from the deck to the active player's hand
    */

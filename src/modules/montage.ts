@@ -9,7 +9,15 @@ const cardPadding = 4;
 const paddedWidth = cardWidth + cardPadding * 2;
 const paddedHeight = cardHeight + cardPadding * 2;
 
-export const createCardMontage = async (cards: Card[]) => {
+export type MontageResult = {
+  height: number;
+  width: number;
+  buffer: Buffer;
+};
+
+export const createCardMontage = async (
+  cards: Card[]
+): Promise<MontageResult> => {
   const images = await Promise.all(
     cards.map((card: Card) =>
       loadImage(`./src/assets/${basename(card.toUrl('M'))}`)
