@@ -1,10 +1,10 @@
-import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
+import { resolve } from 'path';
 import { last } from 'lodash-es';
 import pluralize from 'pluralize';
-import { send, actions } from 'xstate';
-import type { ActionFunctionMap } from 'xstate';
 import { readFileSync } from 'jsonfile';
-import { resolve } from 'path';
+import { actions, raise } from 'xstate';
+import type { ActionFunctionMap } from 'xstate';
+import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
 
 import { uno as config } from '../modules/config.js';
 import {
@@ -139,9 +139,9 @@ export default {
   notifyAllHands: pure<GameContext, GameEvent>(({ players }) =>
     players
       .slice(1)
-      .map((player) => send({ type: 'HAND_REQUEST', id: player.id }))
+      .map((player) => raise({ type: 'HAND_REQUEST', id: player.id }))
   ),
-  notifyActivePlayerHand: send<GameContext, GameEvent>(({ activePlayer }) => ({
+  notifyActivePlayerHand: raise<GameContext, GameEvent>(({ activePlayer }) => ({
     type: 'HAND_REQUEST',
     id: activePlayer?.id
   })),

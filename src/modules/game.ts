@@ -1,4 +1,4 @@
-import { createMachine, interpret, send } from 'xstate';
+import { createMachine, interpret, raise } from 'xstate';
 
 import { getLogger } from './logging.js';
 import guards from '../guards/index.js';
@@ -147,7 +147,7 @@ const createGame = () =>
             PLAYER_REMOVE: [
               { actions: 'notifyNotInGame', cond: 'isPlayerNotInGame' },
               {
-                actions: send('GAME_STOP'),
+                actions: raise('GAME_STOP'),
                 cond: 'isTwoPlayerGame'
               },
               {
@@ -225,7 +225,7 @@ const createGame = () =>
               invoke: {
                 src: 'updateScores',
                 onDone: {
-                  actions: send('GAME_STOP')
+                  actions: raise('GAME_STOP')
                 }
               }
             },
