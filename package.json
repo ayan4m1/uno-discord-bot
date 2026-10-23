@@ -23,8 +23,7 @@
     "pluralize": "^8.0.0",
     "utf-8-validate": "^6.0.6",
     "winston": "^3.19.0",
-    "xstate": "4.38.3",
-    "zlib-sync": "^0.1.10"
+    "xstate": "4.38.3"
   },
   "devDependencies": {
     "@ayan4m1/rollup-plugin-multi-input": "^2.1.2",
@@ -48,6 +47,7 @@
     "prisma": "7.10.1",
     "rollup": "^4.65.0",
     "rollup-plugin-auto-external": "^2.0.0",
+    "rollup-plugin-node-externals": "^9.0.1",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.0"
   },

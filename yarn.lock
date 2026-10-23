@@ -4894,15 +4894,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nan@npm:^2.18.0":
-  version: 2.30.0
-  resolution: "nan@npm:2.30.0"
-  dependencies:
-    node-gyp: "npm:latest"
-  checksum: 10c0/563bf97c84099feeccae9aeaee1f1e14043e0ab0e8525497058495373e9a53abd46b00a6f5d178931911c2739c8ee94604da13d1245ab9e8b689339e61e98c23
-  languageName: node
-  linkType: hard
-
 "napi-build-utils@npm:^2.0.0":
   version: 2.0.0
   resolution: "napi-build-utils@npm:2.0.0"
@@ -5773,6 +5764,21 @@ __metadata:
   peerDependencies:
     rollup: ">=0.45.2"
   checksum: 10c0/76df6c51c2cca40c164f55a3a3bc4b7cfa79bd22ea284e1657bd0867510af2998993b582b40c6d66479e8b070d905155d08a26d588f2647ec29cad5e1a4bdaa0
+  languageName: node
+  linkType: hard
+
+"rollup-plugin-node-externals@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "rollup-plugin-node-externals@npm:9.0.1"
+  peerDependencies:
+    rollup: ^4.0.0
+    vite: ">=5.0.0"
+  peerDependenciesMeta:
+    rollup:
+      optional: true
+    vite:
+      optional: true
+  checksum: 10c0/0d57f267cf7356aecd3ec08fa031cccfb4e621b1d0f83216240bcf647ab439b083340a1d927bb8dab3a20fe21b47fd4929a99086bfb3d08c7ad740f191d3bf9d
   languageName: node
   linkType: hard
 
@@ -6788,12 +6794,12 @@ __metadata:
     prisma: "npm:7.10.1"
     rollup: "npm:^4.65.0"
     rollup-plugin-auto-external: "npm:^2.0.0"
+    rollup-plugin-node-externals: "npm:^9.0.1"
     typescript: "npm:^6.0.3"
     typescript-eslint: "npm:^8.72.0"
     utf-8-validate: "npm:^6.0.6"
     winston: "npm:^3.19.0"
     xstate: "npm:4.38.3"
-    zlib-sync: "npm:^0.1.10"
   languageName: unknown
   linkType: soft
 
@@ -7210,15 +7216,5 @@ __metadata:
     grammex: "npm:^3.1.11"
     graphmatch: "npm:^1.1.0"
   checksum: 10c0/6baa15863f1bbf0131a50f80df82bdc1d174f45e81587ff6a2ac2ad13a0c4a1f80e883794d5711ad31acdd85195ebe052375e43db5c4bcbaff98f040c082234e
-  languageName: node
-  linkType: hard
-
-"zlib-sync@npm:^0.1.10":
-  version: 0.1.10
-  resolution: "zlib-sync@npm:0.1.10"
-  dependencies:
-    nan: "npm:^2.18.0"
-    node-gyp: "npm:latest"
-  checksum: 10c0/b37b93bd409be5af704e2f0311aa53d64585ae7dac344c3a5c92282fb3e0f8e8b8702050ff52ad9cb0eac7a94db59063748e66177f5b82b83f603dda356a3214
   languageName: node
   linkType: hard
