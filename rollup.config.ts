@@ -4,6 +4,8 @@ import multiInput from '@ayan4m1/rollup-plugin-multi-input';
 
 export default {
   input: './src/**/*.ts',
+  // auto-external misses node: builtins and package subpath imports
+  external: [/^node:/, /^@prisma\/client\//],
   output: {
     dir: './lib',
     format: 'esm'
