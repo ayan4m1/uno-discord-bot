@@ -2,7 +2,8 @@ import { AttachmentBuilder, EmbedBuilder } from 'discord.js';
 import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 import { send, actions } from 'xstate';
-import jsonfile from 'jsonfile';
+import type { ActionFunctionMap } from 'xstate';
+import { readFileSync } from 'jsonfile';
 import { resolve } from 'path';
 
 import { uno as config } from '../modules/config.js';
@@ -15,15 +16,15 @@ import {
 } from '../modules/discord.js';
 import { getLeaderboard } from '../modules/database.js';
 import { createCardMontage } from '../modules/montage.js';
-import { GameContext, GameEvent } from '../modules/game.js';
+import type { GameContext, GameEvent } from '../types.js';
 
 const { pure } = actions;
-const { readFileSync } = jsonfile;
-
-const packageJson = readFileSync(resolve('.', 'package.json'));
+const packageJson: { version: string } = readFileSync(
+  resolve('.', 'package.json')
+);
 
 export default {
-  notifySolicit: (_, { interaction }: GameEvent) =>
+  notifySolicit: (_: GameContext, { interaction }: GameEvent) =>
     replyEmbed(
       interaction,
       new EmbedBuilder({
@@ -40,7 +41,7 @@ export default {
         description: `Dealing cards to ${players.length} players...`
       })
     ),
-  notifyGameStop: (_, { interaction }: GameEvent) => {
+  notifyGameStop: (_: GameContext, { interaction }: GameEvent) => {
     const embed = new EmbedBuilder({
       title: 'Game stopped!',
       description: 'The game was stopped.'
@@ -79,7 +80,7 @@ export default {
           })
         : new EmbedBuilder({ description: 'Not playing a game!' })
     ),
-  notifyAddPlayer: (_, { username, interaction }: GameEvent) =>
+  notifyAddPlayer: (_: GameContext, { username, interaction }: GameEvent) =>
     replyEmbed(
       interaction,
       new EmbedBuilder({
@@ -87,7 +88,7 @@ export default {
         description: `${username} has joined the game!`
       })
     ),
-  notifyRemovePlayer: (_, { username, interaction }: GameEvent) =>
+  notifyRemovePlayer: (_: GameContext, { username, interaction }: GameEvent) =>
     replyEmbed(
       interaction,
       new EmbedBuilder({
@@ -95,33 +96,33 @@ export default {
         description: `${username} has left the game!`
       })
     ),
-  notifyInGame: (_, { interaction }: GameEvent) =>
+  notifyInGame: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You are already in the game!'),
-  notifyNotInGame: (_, { interaction }: GameEvent) =>
+  notifyNotInGame: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You are not in the game!'),
-  notifyInvalidAdd: (_, { interaction }: GameEvent) =>
+  notifyInvalidAdd: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'Sorry, you cannot join now!'),
-  notifyInvalidRemove: (_, { interaction }: GameEvent) =>
+  notifyInvalidRemove: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'Sorry, you cannot leave now!'),
-  notifyInvalidPlayer: (_, { interaction }: GameEvent) =>
+  notifyInvalidPlayer: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, "It's not your turn!"),
-  notifyInvalidPass: (_, { interaction }: GameEvent) =>
+  notifyInvalidPass: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(
       interaction,
       'You shall not pass (without first drawing a card)!'
     ),
-  notifyInvalidPlay: (_, { interaction }: GameEvent) =>
+  notifyInvalidPlay: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You cannot play now!'),
-  notifyInvalidDraw: (_, { interaction }: GameEvent) =>
+  notifyInvalidDraw: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You cannot draw now!'),
-  notifyInvalidColorChange: (_, { interaction }: GameEvent) =>
+  notifyInvalidColorChange: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You cannot change colors right now!'),
-  notifyDuplicateDraw: (_, { interaction }: GameEvent) =>
+  notifyDuplicateDraw: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(
       interaction,
       'You have already drawn a card! Use `/play` or `/pass`!'
     ),
-  notifyMissingCard: (_, { interaction }: GameEvent) =>
+  notifyMissingCard: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'You cannot play that card!'),
   notifyInvalidCard: (
     { discardPile }: GameContext,
@@ -129,25 +130,28 @@ export default {
   ) =>
     replyMessage(
       interaction,
-      `You cannot play ${card?.toString()} on ${last(discardPile).toString()}!`
+      `You cannot play ${card?.toString()} on ${last(discardPile)?.toString()}!`
     ),
-  notifyInvalidColor: (_, { color, interaction }: GameEvent) =>
+  notifyInvalidColor: (_: GameContext, { color, interaction }: GameEvent) =>
     replyMessage(interaction, `${color} is not a valid color (R, G, B, or Y)`),
   notifyDraw: ({ activePlayer }: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, `${activePlayer?.username} drew a card!`),
-  notifyAllHands: pure(({ players }) =>
+  notifyAllHands: pure<GameContext, GameEvent>(({ players }) =>
     players
       .slice(1)
       .map((player) => send({ type: 'HAND_REQUEST', id: player.id }))
   ),
-  notifyActivePlayerHand: send(({ activePlayer }: GameContext) => ({
+  notifyActivePlayerHand: send<GameContext, GameEvent>(({ activePlayer }) => ({
     type: 'HAND_REQUEST',
     id: activePlayer?.id
   })),
-  notifyInactiveGame: (_, { interaction }) =>
+  notifyInactiveGame: (_: GameContext, { interaction }: GameEvent) =>
     replyMessage(interaction, 'No game is active!'),
-  notifyHand: async ({ hands }, { interaction, id }) => {
-    if (!Array.isArray(hands[id])) {
+  notifyHand: async (
+    { hands }: GameContext,
+    { interaction, id }: GameEvent
+  ) => {
+    if (!id || !Array.isArray(hands[id])) {
       return sendMessage("Could not find that player's hand");
     }
 
@@ -174,14 +178,14 @@ export default {
       return sendPrivateEmbed(id, embed, attachments);
     }
   },
-  notifyLeaderboard: async (_, { interaction }) => {
+  notifyLeaderboard: async (_: GameContext, { interaction }: GameEvent) => {
     const leaderboard = await getLeaderboard();
 
     if (!leaderboard) {
       return replyMessage(interaction, 'Error fetching leaderboard data!');
     }
 
-    const entries = Object.entries(leaderboard);
+    const entries = [...leaderboard.entries()];
 
     entries.sort(([, a], [, b]) => a.ratio - b.ratio);
 
@@ -198,7 +202,7 @@ export default {
       })
     );
   },
-  notifyHelp: (_, { interaction }) =>
+  notifyHelp: (_: GameContext, { interaction }: GameEvent) =>
     replyEmbed(
       interaction,
       new EmbedBuilder({
@@ -230,4 +234,4 @@ export default {
         }
       })
     )
-};
+} satisfies ActionFunctionMap<GameContext, GameEvent>;

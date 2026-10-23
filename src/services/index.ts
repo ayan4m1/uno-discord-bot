@@ -1,4 +1,5 @@
-import { EmbedBuilder, User } from 'discord.js';
+import { EmbedBuilder } from 'discord.js';
+import type { ServiceConfig } from 'xstate';
 import { last } from 'lodash-es';
 import pluralize from 'pluralize';
 
@@ -21,7 +22,7 @@ import {
   getCardColor,
   scoreHand
 } from '../modules/deck.js';
-import { GameContext, GameEvent } from '../modules/game.js';
+import type { GameContext, GameEvent } from '../types.js';
 
 export default {
   notifyRoundStart: ({
@@ -32,6 +33,10 @@ export default {
     activePlayer
   }: GameContext) => {
     const discard = last(discardPile);
+
+    if (!discard) {
+      return sendMessage('Error determining the top of the discard pile!');
+    }
 
     let hexColor: number | undefined;
 
@@ -81,11 +86,15 @@ export default {
 
     return sendEmbed(embed);
   },
-  notifyPlay: (
+  notifyPlay: async (
     { activePlayer, discardPile }: GameContext,
     { interaction }: GameEvent
   ) => {
     const card = last(discardPile);
+
+    if (!card) {
+      return replyMessage(interaction, 'Error determining the card played!');
+    }
 
     let hexColor: number | undefined;
 
@@ -103,7 +112,7 @@ export default {
   },
   notifyNoPlayers: () =>
     sendMessage('Cancelled the game because there were not enough players!'),
-  notifyColorChange: (
+  notifyColorChange: async (
     { color, activePlayer }: GameContext,
     { interaction }: GameEvent
   ) =>
@@ -126,7 +135,7 @@ export default {
     const [winnerId] = Object.entries(hands).find(
       ([, hand]) => hand.length === 0
     ) ?? [''];
-    const winner = players.find((player: User) => player.id === winnerId);
+    const winner = players.find((player) => player.id === winnerId);
 
     return sendEmbed(
       new EmbedBuilder({
@@ -135,8 +144,10 @@ export default {
       })
     );
   },
-  notifyPass: ({ activePlayer }: GameContext, { interaction }: GameEvent) =>
-    replyMessage(interaction, `${activePlayer?.username} passed!`),
+  notifyPass: async (
+    { activePlayer }: GameContext,
+    { interaction }: GameEvent
+  ) => replyMessage(interaction, `${activePlayer?.username} passed!`),
   notifySkip: ({ activePlayer }: GameContext) =>
     sendMessage(`Skipping ${activePlayer?.username}`),
   createGame: ({ players }: GameContext) => startGame(players),
@@ -145,11 +156,19 @@ export default {
       ([, hand]) => hand.length === 0
     ) ?? [''];
 
+    if (!gameId) {
+      return;
+    }
+
     await stopGame(gameId);
     await setWinner(gameId, winnerId);
     for (const { id } of players) {
       await createScore(gameId, { id }, scoreHand(hands[id]));
     }
   },
-  stopGame: ({ gameId }: GameContext) => stopGame(gameId)
-};
+  stopGame: async ({ gameId }: GameContext) => {
+    if (gameId) {
+      await stopGame(gameId);
+    }
+  }
+} satisfies Record<string, ServiceConfig<GameContext, GameEvent>>;

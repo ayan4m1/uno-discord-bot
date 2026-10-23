@@ -1,8 +1,9 @@
-import { User } from 'discord.js';
-import { negate, last } from 'lodash';
+import { negate, last } from 'lodash-es';
+import type { ConditionPredicate } from 'xstate';
 
-import { GameContext, GameEvent } from '../modules/game.js';
-import { Card, CardType, getCardColor } from '../modules/deck.js';
+import type { GameContext, GameEvent } from '../types.js';
+import { CardType, getCardColor } from '../modules/deck.js';
+import type { Card } from '../modules/deck.js';
 
 export default {
   canGameStart: ({ players }: GameContext) => players.length > 1,
@@ -12,9 +13,9 @@ export default {
   isTwoPlayerGame: ({ players }: GameContext) => players.length === 2,
   isDeckEmpty: ({ deck }: GameContext) => deck.length === 0,
   isPlayerInGame: ({ players }: GameContext, { id }: GameEvent) =>
-    Boolean(players.find((player: User) => player.id === id)),
-  isPlayerNotInGame: negate(({ players }, { id }: GameEvent) =>
-    Boolean(players.find((player: User) => player.id === id))
+    Boolean(players.find((player) => player.id === id)),
+  isPlayerNotInGame: negate(({ players }: GameContext, { id }: GameEvent) =>
+    Boolean(players.find((player) => player.id === id))
   ),
   isPlayerActive: ({ players, activePlayer }: GameContext, { id }: GameEvent) =>
     players.find((player) => player.id === activePlayer?.id)?.id === id,
@@ -82,4 +83,4 @@ export default {
   },
   playerHasUno: ({ hands, activePlayer }: GameContext) =>
     !activePlayer || hands[activePlayer.id].length === 1
-};
+} satisfies Record<string, ConditionPredicate<GameContext, GameEvent>>;

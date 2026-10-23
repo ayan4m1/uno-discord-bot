@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
 
-import { createInteractionHandler } from '../modules/discord.js';
+import { createInteractionHandler } from '../modules/interaction.js';
 
 export const data = new SlashCommandBuilder()
   .setName('help')

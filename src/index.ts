@@ -1,5 +1,6 @@
 import { service } from './modules/game.js';
-import { connectBot, registerCommands } from './modules/discord.js';
+import { registerCommands } from './modules/commands.js';
+import { connectBot } from './modules/discord.js';
 
 const execute = async () => {
   service.start();

@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 
-import { createInteractionHandler, isAdmin } from '../modules/discord.js';
+import { isAdmin } from '../modules/discord.js';
+import { createInteractionHandler } from '../modules/interaction.js';
 
 export const data = new SlashCommandBuilder()
   .setName('stop')

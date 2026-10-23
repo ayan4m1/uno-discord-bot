@@ -1,36 +1,14 @@
-import { ChatInputCommandInteraction, User } from 'discord.js';
-import { createMachine, EventObject, interpret, send } from 'xstate';
+import { createMachine, interpret, send } from 'xstate';
 
 import { getLogger } from './logging.js';
 import guards from '../guards/index.js';
 import actions from '../actions/index.js';
 import services from '../services/index.js';
 import { uno as config } from './config.js';
-import { Card, CardColor, createContext } from './deck.js';
+import { createContext } from './deck.js';
+import type { GameContext, GameEvent } from '../types.js';
 
 const log = getLogger('game');
-
-export type GameContext = {
-  deck: Card[];
-  discardPile: Card[];
-  hands: {
-    [playerId: string]: Card[];
-  };
-  players: User[];
-  color?: CardColor;
-  activePlayer?: User;
-  lastDrawPlayer?: User;
-  gameId?: string;
-};
-
-export type GameEvent = EventObject & {
-  id: string;
-  card?: Card;
-  interaction?: ChatInputCommandInteraction;
-  ephemeral?: boolean;
-  username?: string;
-  color?: CardColor;
-};
 
 const createGame = () =>
   createMachine<GameContext, GameEvent>(

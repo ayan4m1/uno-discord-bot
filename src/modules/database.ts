@@ -1,11 +1,18 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
+import { PrismaClient } from '../generated/prisma/client.js';
 import { getLogger } from './logging.js';
+import type { Player } from '../types.js';
 
 const log = getLogger('database');
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.UNO_DB_URL })
+});
 
-export const mergeUser = async (user) => {
+const logError = (error: unknown) =>
+  log.error(error instanceof Error ? error.message : String(error));
+
+export const mergeUser = async (user: Player) => {
   try {
     const foundUser = await prisma.user.findUnique({ where: { id: user.id } });
 
@@ -20,17 +27,18 @@ export const mergeUser = async (user) => {
       });
     } else {
       await prisma.user.create({
-        data: user
+        data: {
+          id: user.id,
+          username: user.username
+        }
       });
     }
   } catch (error) {
-    if (error instanceof Error) {
-    log.error(error.message);
-    }
+    logError(error);
   }
 };
 
-export const startGame = async (players) => {
+export const startGame = async (players: Player[]) => {
   try {
     for (const player of players) {
       await mergeUser(player);
@@ -47,11 +55,11 @@ export const startGame = async (players) => {
 
     return id;
   } catch (error) {
-    log.error(error.message);
+    logError(error);
   }
 };
 
-export const stopGame = async (id) => {
+export const stopGame = async (id: bigint) => {
   try {
     await prisma.game.update({
       where: {
@@ -62,28 +70,29 @@ export const stopGame = async (id) => {
       }
     });
   } catch (error) {
-    if (error instanceof Error) {
-    log.error(error.message);
-    }
+    logError(error);
   }
 };
 
-export const setWinner = async (id, winnerId) => {
+export const setWinner = async (id: bigint, winnerId: string) => {
   try {
     await prisma.game.update({
       where: { id },
       data: { winnerId }
     });
   } catch (error) {
-    log.error(error.message);
+    logError(error);
   }
 };
 
-export const createScore = async (gameId, user, score) => {
+export const createScore = async (
+  gameId: bigint,
+  user: Pick<Player, 'id'>,
+  score: number
+) => {
   try {
     await prisma.gameUser.update({
       where: {
-        // eslint-disable-next-line camelcase
         gameId_userId: {
           gameId,
           userId: user.id
@@ -94,7 +103,7 @@ export const createScore = async (gameId, user, score) => {
       }
     });
   } catch (error) {
-    log.error(error.message);
+    logError(error);
   }
 };
 
@@ -141,7 +150,7 @@ export const getLeaderboard = async (): Promise<
       }
     }
   } catch (error) {
-    log.error(error.message);
+    logError(error);
   }
 
   return scores;

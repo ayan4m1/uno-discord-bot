@@ -1,5 +1,4 @@
 import { uno as config } from './config.js';
-import { GameContext } from './game.js';
 
 export const HandSize = 7;
 export const WildDrawSize = 4;
@@ -21,14 +20,14 @@ export enum CardColor {
   BLUE = 'Blue'
 }
 
-export const hexColors = {
+export const hexColors: Record<CardColor, number> = {
   [CardColor.RED]: 0xff0000,
   [CardColor.BLUE]: 0x0000ff,
   [CardColor.GREEN]: 0x00ff00,
   [CardColor.YELLOW]: 0xffff00
 };
 
-export const getCardColor = (str: string) =>
+export const getCardColor = (str?: string) =>
   Object.values(CardColor).find(
     (val) => val?.toUpperCase?.()[0] === str?.trim?.()?.toUpperCase?.()[0]
   );
@@ -143,7 +142,7 @@ export class Card {
   /**
    * Returns one or two characters representing the card value/type.
    */
-  get cardCode() {
+  get cardCode(): string {
     switch (this.type) {
       case CardType.WILD_DRAW:
         return 'WD';
@@ -157,7 +156,7 @@ export class Card {
         return 'R';
       case CardType.NUMBER:
       default:
-        return this.value;
+        return String(this.value ?? '');
     }
   }
 
@@ -241,10 +240,10 @@ export const createDeck = (): Array<Card> =>
       }
     });
 
-export const createContext = (): GameContext => ({
+export const createContext = () => ({
   deck: createDeck(),
-  discardPile: [],
-  hands: {},
+  discardPile: [] as Card[],
+  hands: {} as Record<string, Card[]>,
   players: []
 });
 

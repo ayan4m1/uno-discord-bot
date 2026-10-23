@@ -1,5 +1,6 @@
 import { send, assign } from 'xstate';
-import { sample, reverse, last, shuffle } from 'lodash';
+import type { ActionFunctionMap, DoneInvokeEvent } from 'xstate';
+import { sample, last, shuffle } from 'lodash-es';
 
 import {
   CardColor,
@@ -11,81 +12,83 @@ import {
   WildDrawSize
 } from '../modules/deck.js';
 import { createScore } from '../modules/database.js';
-import { GameContext, GameEvent } from '../modules/game.js';
+import type { GameContext, GameEvent } from '../types.js';
+
+/**
+ * Returns the player after the supplied one, wrapping around to the start.
+ */
+const getNextPlayer = (
+  { players }: GameContext,
+  player?: GameContext['activePlayer']
+) => {
+  const currentIndex = player ? players.indexOf(player) : -1;
+
+  return players[currentIndex === players.length - 1 ? 0 : currentIndex + 1];
+};
 
 export default {
   /**
    * Take the gameId from the database result and set it in the context
    */
-  assignGameId: assign({
-    gameId: (_, { data }) => data
+  assignGameId: assign<GameContext, GameEvent>({
+    gameId: (_, event) => (event as DoneInvokeEvent<bigint | undefined>).data
   }),
   /**
    * Create a brand new context
    */
-  resetGameState: assign(createContext()),
+  resetGameState: assign<GameContext, GameEvent>(() => createContext()),
   /**
-   * Set lastDrawPlayer to null
+   * Set lastDrawPlayer to undefined
    */
-  resetLastDrawPlayer: assign({
-    lastDrawPlayer: () => null
+  resetLastDrawPlayer: assign<GameContext, GameEvent>({
+    lastDrawPlayer: () => undefined
   }),
   /**
    * Shuffle all players
    */
-  shufflePlayers: assign({
-    players: ({ players }: GameContext) => shuffle(players)
+  shufflePlayers: assign<GameContext, GameEvent>({
+    players: ({ players }) => shuffle(players)
   }),
   /**
-   * Advance to the next player
+   * Advance to the next player, or the first player if nobody is active yet
    */
-  activateNextPlayer: assign({
-    activePlayer: ({ players, activePlayer }: GameContext) => {
-      if (!activePlayer) {
-        return;
-      }
-
-      const currentIndex = players.indexOf(activePlayer);
-
-      return players[
-        currentIndex === players.length - 1 ? 0 : currentIndex + 1
-      ];
-    }
+  activateNextPlayer: assign<GameContext, GameEvent>({
+    activePlayer: (context) => getNextPlayer(context, context.activePlayer)
   }),
   /**
    * Add a new player to the pending game
    */
-  addPlayer: assign({
-    players: ({ players }, { id, username }) => [
-      ...players,
-      {
-        id,
-        username
-      }
-    ]
+  addPlayer: assign<GameContext, GameEvent>({
+    players: ({ players }, { id, username }) =>
+      id && username ? [...players, { id, username }] : players
   }),
   /**
    * Remove an existing player from a pending game
    */
-  removePlayer: assign({
+  removePlayer: assign<GameContext, GameEvent>({
     players: ({ players }, { id }) =>
       players.filter((player) => player.id !== id)
   }),
   /**
    * Remove an existing player from an active game
    */
-  removePlayerMidgame: assign(
+  removePlayerMidgame: assign<GameContext, GameEvent>(
     ({ gameId, discardPile, players, hands }, { id }) => {
-      const newDiscard = [...discardPile];
+      if (!id) {
+        return {};
+      }
+
+      const hand = hands[id] ?? [];
       const newHands = { ...hands };
 
-      newDiscard.push.apply(newDiscard, newHands[id]);
       delete newHands[id];
 
-      createScore(gameId, { id }, scoreHand(hands[id]));
+      if (gameId) {
+        createScore(gameId, { id }, scoreHand(hand));
+      }
 
       return {
-        discardPile: newDiscard,
+        discardPile: [...discardPile, ...hand],
         hands: newHands,
         players: players.filter((player) => player.id !== id)
       };
@@ -94,28 +97,26 @@ export default {
   /**
    * Deal out hands and set up discardPile
    */
-  dealHands: assign(({ deck, players }) => {
-    const hands = {};
+  dealHands: assign<GameContext, GameEvent>(({ deck, players }) => {
+    const hands: GameContext['hands'] = {};
 
     const remainingDeck = [...shuffle(deck)];
 
     for (const player of players) {
-      const hand = remainingDeck.splice(0, HandSize);
-
-      hands[player.id] = hand;
+      hands[player.id] = remainingDeck.splice(0, HandSize);
     }
 
     const discardPile = remainingDeck.splice(0, 1);
 
-    let color;
+    let color: CardColor | undefined;
 
-    switch (discardPile[0].type) {
+    switch (discardPile[0]?.type) {
       case CardType.WILD:
       case CardType.WILD_DRAW:
         color = sample(Object.values(CardColor));
         break;
       default:
-        color = null;
+        color = undefined;
         break;
     }
 
@@ -129,11 +130,12 @@ export default {
   /**
    * Remove a card from the active player's hand and add it to the discard pile
    */
-  playCard: assign(
-    (
-      { discardPile, hands, activePlayer }: GameContext,
-      { card }: GameEvent
-    ) => {
+  playCard: assign<GameContext, GameEvent>(
+    ({ discardPile, hands, activePlayer }, { card }) => {
+      if (!activePlayer || !card) {
+        return {};
+      }
+
       const hand = [...hands[activePlayer.id]];
 
       hand.splice(
@@ -153,7 +155,11 @@ export default {
   /**
    * Deal a card from the deck to the active player's hand
    */
-  drawCard: assign(({ activePlayer, hands, deck }) => {
+  drawCard: assign<GameContext, GameEvent>(({ activePlayer, hands, deck }) => {
+    if (!activePlayer) {
+      return {};
+    }
+
     const [newCard] = deck.splice(0, 1);
     const hand = [...hands[activePlayer.id], newCard];
 
@@ -169,81 +175,78 @@ export default {
   /**
    * Change the active color for wilds
    */
-  changeColor: assign({
+  changeColor: assign<GameContext, GameEvent>({
     color: (_, { color }) => color
   }),
   /**
    * Pick a random color for wilds
    */
-  changeColorRandom: send(() => ({
+  changeColorRandom: send<GameContext, GameEvent>(() => ({
     type: 'PLAYER_CHANGE_COLOR',
     color: sample(Object.values(CardColor))
   })),
   /**
    * Handle special (i.e. non-numeric) card effects
    */
-  handleSpecialCard: assign(
-    ({ activePlayer, players, deck, hands, discardPile }) => {
-      const discard = last(discardPile);
-      const activePlayerIndex = players.indexOf(activePlayer);
-      const nextPlayer =
-        players[
-          activePlayerIndex === players.length - 1 ? 0 : activePlayerIndex + 1
-        ];
-      const nextPlayerHand = hands[nextPlayer.id];
+  handleSpecialCard: assign<GameContext, GameEvent>((context) => {
+    const { activePlayer, players, deck, hands, discardPile } = context;
+    const discard = last(discardPile);
+    const nextPlayer = getNextPlayer(context, activePlayer);
+    const nextPlayerHand = hands[nextPlayer.id];
 
-      switch (discard.type) {
-        case CardType.WILD_DRAW: {
-          const newCards = deck.splice(0, WildDrawSize);
+    switch (discard?.type) {
+      case CardType.WILD_DRAW: {
+        const newCards = deck.splice(0, WildDrawSize);
 
-          return {
-            hands: {
-              ...hands,
-              [nextPlayer.id]: [...nextPlayerHand, ...newCards]
-            },
-            activePlayer: nextPlayer,
-            deck
-          };
-        }
-        case CardType.DRAW: {
-          const newCards = deck.splice(0, DrawSize);
+        return {
+          hands: {
+            ...hands,
+            [nextPlayer.id]: [...nextPlayerHand, ...newCards]
+          },
+          activePlayer: nextPlayer,
+          deck
+        };
+      }
+      case CardType.DRAW: {
+        const newCards = deck.splice(0, DrawSize);
 
+        return {
+          hands: {
+            ...hands,
+            [nextPlayer.id]: [...nextPlayerHand, ...newCards]
+          },
+          activePlayer: nextPlayer,
+          deck
+        };
+      }
+      case CardType.SKIP: {
+        return {
+          activePlayer: nextPlayer
+        };
+      }
+      case CardType.REVERSE: {
+        const reversed = [...players].reverse();
+
+        // handles special rule for two-player games
+        if (players.length === 2) {
           return {
-            hands: {
-              ...hands,
-              [nextPlayer.id]: [...nextPlayerHand, ...newCards]
-            },
-            activePlayer: nextPlayer,
-            deck
-          };
-        }
-        case CardType.SKIP: {
-          return {
+            players: reversed,
             activePlayer: nextPlayer
           };
+        } else {
+          return {
+            players: reversed
+          };
         }
-        case CardType.REVERSE: {
-          // handles special rule for two-player games
-          if (players.length === 2) {
-            return {
-              players: reverse(players),
-              activePlayer: nextPlayer
-            };
-          } else {
-            return {
-              players: reverse(players)
-            };
-          }
-        }
-        default:
-          return {};
       }
+      default:
+        return {};
     }
-  ),
+  }),
   /**
    * Shuffle the discardPile into the deck
    */
-  rebuildDeck: assign(({ deck, discardPile }) => {
+  rebuildDeck: assign<GameContext, GameEvent>(({ deck, discardPile }) => {
     if (deck.length > 0) {
       return {};
     }
@@ -253,4 +256,4 @@ export default {
       discardPile: []
     };
   })
-};
+} satisfies ActionFunctionMap<GameContext, GameEvent>;

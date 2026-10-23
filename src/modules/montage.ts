@@ -1,6 +1,6 @@
 import { basename } from 'path';
 import { createCanvas, loadImage } from 'canvas';
-import { Card } from './deck.js';
+import type { Card } from './deck.js';
 
 const maxColumns = 10;
 const cardWidth = 64;

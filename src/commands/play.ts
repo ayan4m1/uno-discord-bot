@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 
 import { Card } from '../modules/deck.js';
-import { createInteractionHandler } from '../modules/discord.js';
+import { createInteractionHandler } from '../modules/interaction.js';
 
 export const data = new SlashCommandBuilder()
   .setName('play')

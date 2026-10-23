@@ -1,6 +1,7 @@
-import { ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
+import type { ChatInputCommandInteraction } from 'discord.js';
 
-import { createInteractionHandler } from '../modules/discord.js';
+import { createInteractionHandler } from '../modules/interaction.js';
 import { getCardColor } from '../modules/deck.js';
 
 export const data = new SlashCommandBuilder()
