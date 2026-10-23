@@ -16,6 +16,7 @@ const createGame = () =>
       id: 'uno',
       initial: 'idle',
       context: createContext(),
+      predictableActionArguments: true,
       on: {
         GAME_STOP: {
           actions: 'notifyGameStop',
