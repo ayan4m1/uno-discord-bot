@@ -1,4 +1,4 @@
-import { send, assign } from 'xstate';
+import { assign, raise } from 'xstate';
 import type { ActionFunctionMap, DoneInvokeEvent } from 'xstate';
 import { sample, last, shuffle } from 'lodash-es';
 
@@ -181,7 +181,7 @@ export default {
   /**
    * Pick a random color for wilds
    */
-  changeColorRandom: send<GameContext, GameEvent>(() => ({
+  changeColorRandom: raise<GameContext, GameEvent>(() => ({
     type: 'PLAYER_CHANGE_COLOR',
     color: sample(Object.values(CardColor))
   })),
